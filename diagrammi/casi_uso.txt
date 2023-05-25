@@ -1,0 +1,69 @@
+Casi d'uso
+
+descrizione testuale dei vari casi d'uso descritti nel diagramma UML
+(basato sul file "elementi dominio e casi d'uso" caricato sul DIR)
+
+===============================================================================
+
+Attore: Utente Generico
+Caso d'uso: Accesso al sistema - Login
+
+1.	l'utente sceglie la metodologia di accesso: credenziali o OAuth2
+
+2.	l'utente inserisce le proprie credenziali oppure sfrutta OAuth2 (es. accesso via Google)
+   
+3.	all'utente viene permesso o negato l'accesso al sistema
+
+Estensioni:
+
+3.1	se l'utente non è registrato viene reindirizzato sulla pagina di registrazione alla piattaforma
+3.2	se l'utente era stato bloccato da un amministratore del sistema viene mostrata una pagina di errore
+
+-------------------------------------------------------------------------------
+
+Attore: Utente non registrato
+Caso d'uso: Registrazione al sistema
+
+1.	l'utente indica il proprio tipo: Gestore Idrico o Gestore Agricolo
+
+2.	l'utente sceglie la metodologia di registrazione: credenziali o OAuth2
+
+3.	l'utente compila i vari campi richiesti (nome utente e password) oppure segue i passaggi 
+	richiesti da OAuth2
+	
+4.	la registrazione ha successo / fallisce
+
+Estensioni:
+
+4.1	se l'utente è già registrato (es. nome utente già utilizzato) viene mostrato un messaggio di avviso
+4.2	se la registrazione ha successo, l'utente viene reindirizzato alla pagina di Accesso - Login
+4.3	se la registrazione fallisce viene mostrato un messaggio con eventuali errori
+
+Note:
+	gli utenti, una volta registrati, ed indipendentemente dal proprio tipo, non possiedono nessuna 
+	autorizzazione, che deve essergli assegnata da un utente amministratore
+
+-------------------------------------------------------------------------------
+
+Attore: Utente Amministratore del sistema
+Caso d'uso: Gestione Utenti del sistema
+
+1.	l'amministratore chiede di visualizzare l'elenco di utenti registrati al sistema
+
+2.	l'amministratore sceglie l'azione da compiere: Concedi o Rimuovi autorizzazioni ad un utente 
+	oppure rimuovi utente dal sistema
+	
+Estensioni:
+
+2.1	concessione di autorizzazioni: l'amministratore definisce le autorizzazioni da garantire ad
+	un determinato utente in base al suo tipo (Gestore Idrico o Gestore Agricolo)
+
+2.2	rimozione di autorizzazioni: l'amministratore visualizza e rimuove le autorizzazioni precedentemente
+	concesse ad un utente registrato
+	
+2.3	rimozione di un utente:	l'amministrazione sceglie l'utente da rimuovere; viene richiesta conferma
+	dell'eliminazione ed in caso affermativo i dati vengono cancellati
+	
+	
+	
+
