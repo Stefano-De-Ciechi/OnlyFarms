@@ -31,7 +31,7 @@ Caso d'uso: Registrazione al sistema
 3.	l'utente compila i vari campi richiesti (nome utente e password) oppure segue i passaggi 
 	richiesti da OAuth2
 	
-4.	la registrazione ha successo / fallisce
+4.	la registrazione ha successo oppure fallisce
 
 Estensioni:
 
@@ -64,6 +64,170 @@ Estensioni:
 2.3	rimozione di un utente:	l'amministrazione sceglie l'utente da rimuovere; viene richiesta conferma
 	dell'eliminazione ed in caso affermativo i dati vengono cancellati
 	
+-------------------------------------------------------------------------------
+
+Attore: Gestore Agricolo
+Caso d'uso: Gestione delle prenotazioni idriche di un'azienda agricola
+
+1.	il gestore chiede di visualizzare l'elenco di aziende idriche disponibili ad erogare un servizio 
+	di rifornimento idrico e ne sceglie una
+
+2.	il gestore effettua una prenotazione inserendo la quantità di acqua che vorrebbe ricevere
+
+3.	la prenotazione può essere accettata oppure rifiutata
+
+4.	se la prenotazione viene accettata entra in vigore dal giorno successivo e la si salva nello 
+	storico prenotazioni
+
+5.	il gestore può richiedere di visualizzare lo storico delle prenotazioni ed eseguire delle operazioni
+	sull'ultima prenotazione (quella corrente): aggiornamento o cancellazione
+
+Estensioni:
+
+2.1	prima di effettuare una prenotazione il gestore può eseguire una stima basandosi sulle misurazioni
+	ottenute dai sensori della propria azienda e può affidarsi al servizio meteo offerto direttamente
+	dalla piattaforma
+
+5.1	aggiornamento di una prenotazione: il gestore inserisce il dato aggiornato sulla quantità di acqua,
+	l'aggiornamento può essere accettato oppure rifiutato, se accettato la nuova prenotazione entra
+	in vigore dal giorno successivo e viene salvata nello storico prenotazioni
 	
+5.2	cancellazione di una prenotazione: il gestore interrompe il servizio di rifornimento idrico
+	attualmente in corso con una data azienda
+
+--------------------------------------------------------------------------------
+
+Attore: Gestore Agricolo
+Caso d'uso: Gestione delle coltivazioni di un'azienda agricola
+
+1.	il gestore chiede di visualizzare l'elenco delle coltivazioni della sua azienda
+
+2.	il gestore sceglie l'azione da compiere: nuovo inserimendo, modifica o rimozione (nel secondo
+	e terzo caso deve anche selezionare una delle coltivazioni)
+
+Estensioni:
+
+2.1	nuovo inserimento: il gestore inserisce i dati della coltivazione (dimensione, esigenza d'acqua, 
+	umidità ideale, tipo di irrigazione). Dopo una conferma i dati della nuova coltivazione vengono
+	registrati
 	
+2.2	modifica: al gestore viene mostrata una scheda con i dati della coltivazione e può modificare
+	i vari campi. Al termine deve confermare le modifiche ed i nuovi dati vengono registrati
+
+2.3	rimozione: viene chiesta conferma dell'eliminazione ed in caso affermativo i dati vengono cancellati
+
+--------------------------------------------------------------------------------
+
+Attore: Gestore Agricolo
+Caso d'uso: Gestione di sensori di un'azienda agricola
+
+1.	il gestore chiede di visualizzare l'elenco di sensori relativi ad una coltivazione
+	della sua azienda
+	
+2.	il gestore sceglie l'azione da compiere: nuovo inserimento, lettura misurazioni o rimozione
+
+Estensioni:
+
+2.1	nuovo inserimento: il gestore configura opportunamente il nuovo sensore, selezionando il topic
+	sul quale verranno pubblicate le misurazioni
+
+2.2	lettura misurazioni: il gestore chiede di visualizzare lo storico delle misurazioni relative al
+	sensore selezionato
+	
+2.3	rimozione sensore: viene chiesta conferma dell'eliminazione ed in caso affermativo il sensore
+	viene rimosso dall'elenco relativo alla coltivazione corrente 
+	
+--------------------------------------------------------------------------------
+
+Attore: Gestore Agricolo
+Caso d'uso: Gestione di attuatori di un'azienda agricola
+
+1.	il gestore chiede di visualizzare l'elenco di attuatori relativi ad una coltivazione
+	della sua azienda
+	
+2.	il gestore sceglie l'azione da compiere: nuovo inserimento, gestione o rimozione
+
+Estensioni:
+
+2.1	nuovo inserimento: il gestore configura opportunamente il nuovo attuatore, selezionando i topic
+	sui quali verranno letti i comandi e pubblicati gli stati
+
+2.2	gestione: il gestore può impostare manualmente lo stato dell'attuatore (attivo/inattivo)
+	
+2.3	rimozione attuatore: viene chiesta conferma dell'eliminazione ed in caso affermativo l'attuatore
+	viene rimosso dall'elenco relativo alla coltivazione corrente 
+
+--------------------------------------------------------------------------------
+
+Attore: Gestore Idrico
+Caso d'uso: Gestione delle prenotazioni d'acqua
+
+1.	il gestore chiede di visualizzare l'elenco di prenotazioni ricevute dalla propria azienda
+
+2.	il gestore, dopo aver selezionato una prenotazione, sceglie l'azione da compiere: accettazione
+	o rifiuto
+	
+Estensioni:
+
+2.1	se il gestore accetta la prenotazione, questa entra in vigore dal giorno successivo
+
+---------------------------------------------------------------------------------
+
+Attore: Gestore Idrico
+Caso d'uso: Gestione della riserva idrica
+
+1.	il gestore chiede di visualizzare informazioni sulla riserva idrica della propria azienda
+
+2.	il gestore sceglie l'azione da compiere: aggiornare la disponibilità idrica oppure aggiornare
+	i limiti di erogazione globali
+	
+Estensioni:
+
+2.1	aggiornamento disponibilità idrica: il gestore inserisce la nuova quantità disponibile
+	che può essere maggiore o minore di quella precedente
+	
+2.2	aggiornamento limiti di erogazione: il gestore inserisce i nuovi limiti di erogazione globali
+
+---------------------------------------------------------------------------------
+
+Attore: Gestore Idrico
+Caso d'uso: Gestione delle Aziende Agricole
+
+1.	il gestore chiede di visualizzare la lista di aziende agricole attualmente rifornite
+
+2.	il gestore, dopo aver selezionato un'azienda, sceglie l'azione da compiere: visualizzare dati
+	relativi ai consumi oppure aggiornare i limiti di erogazione
+	
+Estensioni:
+
+2.1	visualizza dati relativi ai consumi: il gestore prende visione dello storico delle prenotazioni
+	relative all'azienda selezionata
+	
+2.2	aggiorna limiti di erogazione: il gestore inserisce i nuovi limiti di erogazione relativi
+	all'azienda selezionata
+
+----------------------------------------------------------------------------------
+
+Attore: Sensore
+Caso d'uso: Invio Misure
+
+1.	il sensore rileva continuamente le misure; queste vengono inviate e quindi registrate con una data
+	periodicità nel sistema. Ogni misura deve riportare un timestamp
+
+----------------------------------------------------------------------------------
+
+Attore: Attuatore
+Caso d'uso: Ricezione Comandi
+
+1.	l'attuatore riceve un comando direttamente da un gestore agricolo dell'azienda a cui appartiene
+	oppure in base a parametri e misurazioni ricevute dai sensori
+	
+2.	l'attuatore cambia stato (es. acceso/spento)
+
+3.	l'attuatore invia informazioni sul proprio stato corrente; queste informazioni saranno registrate
+	nel sistema
+
+Estensioni:
+
+3.1	ogni informazione registrata deve riportare un timestamp
 
