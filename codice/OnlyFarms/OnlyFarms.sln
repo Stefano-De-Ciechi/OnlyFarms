@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlyFarms.RestApi", "OnlyFarms.RestAPi\OnlyFarms.RestApi.csproj", "{A185784F-CD7D-45DF-BA24-70554DA8DB34}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlyFarms.Core", "OnlyFarms.Core\OnlyFarms.Core.csproj", "{5241A932-7A29-485D-9C93-4ECE98539499}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A185784F-CD7D-45DF-BA24-70554DA8DB34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A185784F-CD7D-45DF-BA24-70554DA8DB34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A185784F-CD7D-45DF-BA24-70554DA8DB34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A185784F-CD7D-45DF-BA24-70554DA8DB34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5241A932-7A29-485D-9C93-4ECE98539499}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5241A932-7A29-485D-9C93-4ECE98539499}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5241A932-7A29-485D-9C93-4ECE98539499}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5241A932-7A29-485D-9C93-4ECE98539499}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {98F55ADE-FFD7-4425-9DD2-421742E8F4B4}
+	EndGlobalSection
+EndGlobal
