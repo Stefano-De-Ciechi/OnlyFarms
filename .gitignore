@@ -1,9 +1,17 @@
 diagrammi/.progetto_pissir.vpp.lck
 
 codice/OnlyFarms/.vs
+codice/OnlyFarms/.idea/
 
 codice/OnlyFarms/OnlyFarms.Core/bin
 codice/OnlyFarms/OnlyFarms.Core/obj
 
 codice/OnlyFarms/OnlyFarms.RestApi/bin
 codice/OnlyFarms/OnlyFarms.RestApi/obj
+
+codice/OnlyFarms/OnlyFarms.RestApi/OnlyFarms.sqlite-shm
+codice/OnlyFarms/OnlyFarms.RestApi/OnlyFarms.sqlite-wal
+
+codice/OnlyFarms/OnlyFarms.sln.DotSettings.user
+codice/OnlyFarms/OnlyFarms.RestApi/.idea/
+codice/OnlyFarms/OnlyFarms.RestApi/Folder.DotSettings.user

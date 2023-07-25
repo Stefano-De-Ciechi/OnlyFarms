@@ -2,7 +2,7 @@
 
 namespace OnlyFarms.Infrastructure;
 
-public static class IColletionExtensions
+public static class ColletionExtensions
 {
     public static T? Find<T>(this ICollection<T> list, int id) where T : IHasId
     {

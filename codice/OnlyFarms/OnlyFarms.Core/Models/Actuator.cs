@@ -8,6 +8,7 @@ public record Actuator : IHasId      // entita' Attuatore
         Commands = new List<ActuatorCommand>();
     }
 
-    public required int Id { get; set; }
-    public required ICollection<ActuatorCommand> Commands { get; set; }
+    public int Id { get; set; }
+    public required string Tag { get; set; }
+    public ICollection<ActuatorCommand> Commands { get; init; }
 }

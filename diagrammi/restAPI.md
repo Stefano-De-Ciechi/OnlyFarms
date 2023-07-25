@@ -166,6 +166,7 @@ Response 500 Server Error
 [errorResponse](#error-response)
 
 # ===== AZIENDE =====
+// TODO non abbiamo piu' un singolo endpoint per le aziende ma due separati in base al tipo (idrica o agricola) --> gli endpoint pero' sono pressoche' identici
 
 ## GET /aziende/:id
 restituisce una singola azienda in base all'id

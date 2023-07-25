@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 const string API_VERSION = "v1";
@@ -25,6 +27,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 MapActuatorsRoutes();
+MapFarmingCompaniesRoutes();
+MapWaterCompaniesRoutes();
 
 app.Run();
 
@@ -54,16 +58,94 @@ void InjectRepositories(IServiceCollection services, ConfigurationManager config
     services.AddScoped<IRepository<WaterUsage>>(_ => new DataContextRepository<WaterUsage>(dataContext));
 }
 
-// TODO trovare un approccio scalabile per gli endpoint complessi come questo
+// TODO per gli endpoint piu' "semplici" usare un metodo generico di mapping delle routes (come in DotNetShop)
+
 void MapActuatorsRoutes()
 {
-    var group = app.MapGroup($"{ API_PREFIX }/waterCompanies/{{:companyId}}/crops/{{:cropId}}/actuators")
+    var group = app.MapGroup($"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/actuators")
         .WithTags("Actuators");
 
-    group.MapGet("/{:id}", (DataContext repository, int companyId, int cropId, int actuatorId) =>
+    group.MapGet("/", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId, [FromRoute] int cropId) =>
     {
-        // TODO in questo caso, IRepository<Actuator> e' troppo generico, serve un repository custom in cui si passano gli id dell'azienda, della coltivazione e dell'attuatore e si cerca nel DB solo nelle tabelle giuste
-        // qualcosa del tipo _context.WaterCompanies.Get(companyId).Crops.Get(cropId).Get(actuatorId);
-        return repository.FarmingCompanies?.Find(companyId)?.Crops?.Find(cropId)?.Actuators.Find(actuatorId);
+        var farmingCompany = await repository.Get(companyId);
+
+        if (farmingCompany == null)
+        {
+            return Results.BadRequest($"no farming company with ID = {companyId}");
+        }
+
+        var crop = farmingCompany.Crops.Find(cropId);
+
+        return crop == null ? Results.BadRequest($"no crops with ID = {cropId}") : Results.Ok(crop.Actuators);
+    })
+        .Produces(200)
+        .Produces(400);
+
+    group.MapGet("/{actuatorId:int}", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId,  [FromRoute] int cropId, [FromRoute] int actuatorId) =>
+    {
+        var farmingCompany = await repository.Get(companyId);
+
+        if (farmingCompany == null)
+        {
+            return Results.BadRequest($"no farming company with ID = { companyId }");
+        }
+
+        var crop = farmingCompany.Crops.Find(cropId);
+
+        return crop == null ? Results.BadRequest($"no crops with ID = { cropId }") : Results.Ok(crop.Actuators.Find(actuatorId));
+    })
+        .Produces(200)
+        .Produces(400);
+    
+    group.MapPost("/", async ([FromServices] IRepository<Actuator> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromBody] Actuator actuator) =>
+    {
+        // TODO cercare di capire come avviene il collegamento tra questo attuatore e l'azienda e coltivazione passate come parametri
+        var res = await repository.Add(new Actuator { Tag = actuator.Tag });      // TODO ritornare l'ID dell'attuatore appena creato
+        return res;
     });
+}
+
+void MapFarmingCompaniesRoutes()
+{
+    var group = app.MapGroup($"{API_PREFIX}/farmingCompanies")
+        .WithTags("Farming Companies");
+
+    group.MapGet("/", ([FromServices] IRepository<FarmingCompany> repository) => repository.GetAll());
+
+    group.MapGet("/{id:int}", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int id) =>
+    {
+        var fc = await repository.Get(id);
+
+        return fc == null ? Results.NotFound($"no farming company with ID = {id}") : Results.Ok(fc);
+    });
+
+    group.MapPost("/", async ([FromServices] IRepository<FarmingCompany> repository, [FromBody] FarmingCompany fc) =>
+    {
+        var id = await repository.Add(new FarmingCompany { Address = fc.Address, Name = fc.Name, WaterSupply = fc.WaterSupply});
+        return id;
+    })
+        .Produces<FarmingCompany>(201);
+}
+
+void MapWaterCompaniesRoutes()
+{
+    var group = app.MapGroup($"{ API_PREFIX }/waterCompanies")
+        .WithTags("Water Companies");
+
+    group.MapGet("/", ([FromServices] IRepository<WaterCompany> repository) => repository.GetAll());
+
+    group.MapGet("/{id:int}", async ([FromServices] IRepository<WaterCompany> repository, [FromRoute] int id) =>
+    {
+        var wc = await repository.Get(id);
+
+        return wc == null ? Results.NotFound($"no water company with ID = { id }") : Results.Ok(wc);
+    });
+
+    group.MapPost("/", async ([FromServices] IRepository<WaterCompany> repository, [FromBody] WaterCompany wc) =>
+    {
+        var res = await repository.Add(new WaterCompany { Address = wc.Address, Name = wc.Name, WaterSupply = wc.WaterSupply });
+
+        return Results.Created($"{ API_PREFIX }/waterCompanies/{ res?.Id }", res);      // Results.Created restituisce nel body i valori della nuova risorsa e nell'header aggiunge un parametro "location" che punta all'url della nuova risorsa
+    })
+        .Produces<WaterCompany>(201);
 }

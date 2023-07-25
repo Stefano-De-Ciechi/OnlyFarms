@@ -7,9 +7,9 @@ namespace OnlyFarms.Data;
 
 public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
 {
-    readonly DbContext _dataContext;
+    private readonly DbContext _dataContext;
 
-    readonly DbSet<T> _entities;
+    private readonly DbSet<T> _entities;
 
     public DataContextRepository(DbContext dataContext)
     {
@@ -19,32 +19,38 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         _entities = _dataContext.Set<T>();
     }
 
-    public async Task Add(T entity)
+    public async Task<T?> Add(T entity)     // TODO questo metodo dovrebbe ritornare l'ID dell'entità inserita
     {
         await _entities.AddAsync(entity);
         await _dataContext.SaveChangesAsync();
+        
+        return entity;
     }
 
-    public async Task Update(int id, T updatedItem)     // TODO testare che questa funzione di modifica funzioni correttamente!
+    public async Task<T?> Update(int id, T updatedItem)     // TODO testare che questa funzione di modifica funzioni correttamente!
     {
         var entity = await Get(id);
         if (entity == null)
         {
-            return;
+            return null;
         }
 
         _entities.Entry(entity).CurrentValues.SetValues(updatedItem);
         await _dataContext.SaveChangesAsync();
+        
+        return updatedItem;
     }
 
-    public async Task Delete(int id)
+    public async Task<T?> Delete(int id)    // TODO questo metodo dovrebbe ritornare l'entità eliminata
     {
         var entity = await Get(id);
-        if (entity != null)
-        {
-            _dataContext.Remove(entity);
-            await _dataContext.SaveChangesAsync();
-        }
+        
+        if (entity == null) return null;
+        
+        _dataContext.Remove(entity);
+        await _dataContext.SaveChangesAsync();
+        
+        return entity;
     }
 
     public async Task<T?> Get(int id)
