@@ -1,5 +1,6 @@
-﻿using OnlyFarms.Data;
-namespace OnlyFarms.Models;
+﻿using OnlyFarms.Core.Data;
+
+namespace OnlyFarms.Core.Models;
 
 public class WaterCompany : IHasId      // entita' Azienda Idrica
 {

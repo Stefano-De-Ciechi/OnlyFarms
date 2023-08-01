@@ -1,5 +1,6 @@
-﻿using OnlyFarms.Data;
-namespace OnlyFarms.Models;
+﻿using OnlyFarms.Core.Data;
+
+namespace OnlyFarms.Core.Models;
 
 /* 
     NOTE:

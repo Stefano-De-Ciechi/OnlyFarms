@@ -1,5 +1,6 @@
-﻿using OnlyFarms.Data;
-namespace OnlyFarms.Models;
+﻿using OnlyFarms.Core.Data;
+
+namespace OnlyFarms.Core.Models;
 
 public record Reservation : IHasId       // entita' Prenotazione
 {
@@ -9,10 +10,7 @@ public record Reservation : IHasId       // entita' Prenotazione
     public required float Price { get; set; }
     public required bool OnGoing { get; set; }      // indica se una prenotazione è correntemente attiva
     
-    // riferimento alle aziende (agricola e idrica)
+    // riferimenti alle aziende (agricola e idrica)
     public int FarmingCompanyId { get; set; }
-    public FarmingCompany FarmingCompany { get; set; }
-    
     public int WaterCompanyId { get; set; }
-    public WaterCompany WaterCompany { get; set; }
 }

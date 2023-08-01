@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OnlyFarms.Core.Models;
 
-namespace OnlyFarms.Data;
+namespace OnlyFarms.RestApi.Data;
 
 // TODO quando si implementa l'autenticazione, questa classe deve estendere IdentityDbContext !!!
 

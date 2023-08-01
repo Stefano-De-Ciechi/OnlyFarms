@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OnlyFarms.Core.Data;
+using OnlyFarms.Core.Models;
+using OnlyFarms.RestApi.Data;
 
 const string API_VERSION = "v1";
 const string API_PREFIX = $"api/{ API_VERSION }";
@@ -27,8 +30,8 @@ app.UseHttpsRedirection();
 
 MapCommonRoutes<FarmingCompany>("farmingCompanies");
 MapCommonRoutes<WaterCompany>("waterCompanies");
-/*MapCropsRoutes();
-MapCropComponentsRoutes<Actuator>("actuators");
+MapCropsRoutes();
+/*MapCropComponentsRoutes<Actuator>("actuators");
 MapCropComponentsRoutes<Sensor>("sensors");*/
 
 app.Run();
@@ -50,13 +53,15 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     // molte di queste entita' NON devono implementare tutte le operazioni (get, getAll, add, update e delete), quindi potrebbero essere necessarie delle repository diverse
     //services.AddScoped<IRepository<Actuator>>(_ => new DataContextRepository<Actuator>(dataContext));
     //services.AddScoped<IRepository<ActuatorCommand>>(_ => new DataContextRepository<ActuatorCommand>(dataContext));
-    //services.AddScoped<IRepository<Crop>>(_ => new DataContextRepository<Crop>(dataContext));
-    services.AddScoped<IRepository<FarmingCompany>>(_ => new DataContextRepository<FarmingCompany>(dataContext));
     //services.AddScoped<IRepository<Measurement>>(_ => new DataContextRepository<Measurement>(dataContext));
     //services.AddScoped<IRepository<Reservation>>(_ => new DataContextRepository<Reservation>(dataContext));
     //services.AddScoped<IRepository<Sensor>>(_ => new DataContextRepository<Sensor>(dataContext));
-    services.AddScoped<IRepository<WaterCompany>>(_ => new DataContextRepository<WaterCompany>(dataContext));
     //services.AddScoped<IRepository<WaterUsage>>(_ => new DataContextRepository<WaterUsage>(dataContext));
+    
+    services.AddScoped<IRepository<FarmingCompany>>(_ => new DataContextRepository<FarmingCompany>(dataContext));
+    services.AddScoped<IRepository<WaterCompany>>(_ => new DataContextRepository<WaterCompany>(dataContext));
+    services.AddScoped<ICropRepository>(_ => new CropRepository(dataContext));
+
 }
 
 // TODO per gli endpoint piu' "semplici" usare un metodo generico di mapping delle routes (come in DotNetShop)
@@ -101,7 +106,7 @@ void MapCommonRoutes<T>(string routeName) where T : class, IHasId
 }
 
 // TODO ripensare a tutte le chiavi composte, vedi https://learn.microsoft.com/en-us/ef/core/modeling/keys?tabs=data-annotations e rigenerare una migrazione del DB
-/*
+
 void MapCropsRoutes()
 {
     const string fullRoute = $"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/crops";
@@ -109,28 +114,38 @@ void MapCropsRoutes()
         .WithTags("crops");
     
     // GET all
-    group.MapGet("/", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId) =>
-    {
-        var company = await repository.Get(companyId);
-        return company == null ? ResourceNotFound<FarmingCompany>(companyId) : Results.Ok(company.Crops);
-    });
-    
-    // GET single
-    group.MapGet("/{id:int}", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId, [FromRoute] int id) =>
-    {
-        var company = await repository.Get(companyId);
-        if (company == null)
-        {
-            return ResourceNotFound<FarmingCompany>(companyId);
-        }
+    group.MapGet("/", ([FromServices] ICropRepository repository, [FromRoute] int companyId) => repository.GetAll(companyId));
 
-        var crop = company.Crops.Find(id);
-        return crop == null ? ResourceNotFound<Crop>(id) : Results.Ok(company.Crops.Find(id));
+    // GET single
+    group.MapGet("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
+    {
+        var crop = await repository.Get(companyId, id);
+        return crop == null ? ResourceNotFound<Crop>(id) : Results.Ok(crop);
     });
     
     // POST
+    group.MapPost("/", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromBody] Crop crop) =>
+    {
+        var res = await repository.Add(companyId, crop);
+        return res == null ? MissingParameters<Crop>() : ResourceCreated(fullRoute, res);
+    });
+    
+    // PUT
+    group.MapPut("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id, [FromBody] Crop updatedCrop) =>
+    {
+        var res = await repository.Update(companyId, id, updatedCrop);
+        return res == null ? ResourceNotFound<Crop>(id) : Results.Ok(res);
+    });
+    
+    // DELETE
+    group.MapDelete("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
+    {
+        var res = await repository.Delete(companyId, id);
+        return res == null ? ResourceNotFound<Crop>(id) : Results.Ok(res);
+    });
 }
 
+/*
 // TODO creare delle routes generiche per Attuatori e Sensori (ad entrambe serve l'ID di un azienda agricola e di un campo)
 void MapCropComponentsRoutes<T>(string routeName) where T : class, IHasId
 {

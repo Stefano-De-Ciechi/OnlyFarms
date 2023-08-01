@@ -1,5 +1,6 @@
-﻿using OnlyFarms.Data;
-namespace OnlyFarms.Models;
+﻿using OnlyFarms.Core.Data;
+
+namespace OnlyFarms.Core.Models;
 
 public record Measurement : IHasId       // entita' Misurazione (relativa ai sensori)
 {
@@ -8,7 +9,5 @@ public record Measurement : IHasId       // entita' Misurazione (relativa ai sen
     public required float Value { get; set; }
     public required string MeasuringUnit { get; set; }
     
-    // riferimenti al sensore
-    public int SensorId { get; set; }
-    public Sensor Sensor { get; set; }
+    public int SensorId { get; set; }   // riferimento al sensore
 }

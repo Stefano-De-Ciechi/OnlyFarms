@@ -1,4 +1,4 @@
-namespace OnlyFarms.Infrastructure;
+namespace OnlyFarms.Core.Infrastructure;
 
 public static class StringExtensions
 {

@@ -1,4 +1,4 @@
-﻿namespace OnlyFarms.Data;
+﻿namespace OnlyFarms.Core.Data;
 
 public interface IHasId
 {

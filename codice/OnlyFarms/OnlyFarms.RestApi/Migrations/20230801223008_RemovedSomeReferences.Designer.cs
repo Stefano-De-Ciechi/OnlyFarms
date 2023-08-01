@@ -11,8 +11,8 @@ using OnlyFarms.RestApi.Data;
 namespace OnlyFarms.RestApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230608101121_Initial")]
-    partial class Initial
+    [Migration("20230801223008_RemovedSomeReferences")]
+    partial class RemovedSomeReferences
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,14 +20,21 @@ namespace OnlyFarms.RestApi.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.5");
 
-            modelBuilder.Entity("OnlyFarms.Models.Actuator", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Actuator", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("CropId")
+                    b.Property<int>("ActuatorType")
                         .HasColumnType("INTEGER");
+
+                    b.Property<int>("CropId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -36,13 +43,13 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("Actuators");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.ActuatorCommand", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.ActuatorCommand", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ActuatorId")
+                    b.Property<int>("ActuatorId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("State")
@@ -52,9 +59,6 @@ namespace OnlyFarms.RestApi.Migrations
                     b.Property<DateTime>("TimeStamp")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ActuatorId");
@@ -62,13 +66,13 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("ActuatorsCommands");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Crop", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Crop", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("FarmingCompanyId")
+                    b.Property<int>("FarmingCompanyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<float>("IdealHumidity")
@@ -80,6 +84,10 @@ namespace OnlyFarms.RestApi.Migrations
                     b.Property<float>("SurfaceArea")
                         .HasColumnType("REAL");
 
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<float>("WaterNeeds")
                         .HasColumnType("REAL");
 
@@ -90,13 +98,17 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("Crops");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.FarmingCompany", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.FarmingCompany", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("City")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -116,7 +128,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("FarmingCompanies");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Measurement", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Measurement", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -126,7 +138,7 @@ namespace OnlyFarms.RestApi.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("SensorId")
+                    b.Property<int>("SensorId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Timestamp")
@@ -142,7 +154,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("SensorsMeasurements");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Reservation", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Reservation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -151,7 +163,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.Property<float>("BookedQuantity")
                         .HasColumnType("REAL");
 
-                    b.Property<int?>("FarmingCompanyId")
+                    b.Property<int>("FarmingCompanyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("OnGoing")
@@ -163,7 +175,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.Property<DateTime>("TimeStamp")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("WaterCompanyId")
+                    b.Property<int>("WaterCompanyId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -175,17 +187,21 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("Reservations");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Sensor", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Sensor", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("CropId")
+                    b.Property<int>("CropId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Type")
+                    b.Property<int>("SensorType")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -194,13 +210,17 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("Sensors");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.WaterCompany", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.WaterCompany", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("City")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -220,7 +240,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("WaterCompanies");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.WaterUsage", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.WaterUsage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -229,7 +249,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.Property<float>("ConsumedQuantity")
                         .HasColumnType("REAL");
 
-                    b.Property<int?>("FarmingCompanyId")
+                    b.Property<int>("FarmingCompanyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Timestamp")
@@ -242,72 +262,88 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("WaterUsages");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Actuator", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Actuator", b =>
                 {
-                    b.HasOne("OnlyFarms.Models.Crop", null)
+                    b.HasOne("OnlyFarms.Core.Models.Crop", null)
                         .WithMany("Actuators")
-                        .HasForeignKey("CropId");
+                        .HasForeignKey("CropId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.ActuatorCommand", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.ActuatorCommand", b =>
                 {
-                    b.HasOne("OnlyFarms.Models.Actuator", null)
+                    b.HasOne("OnlyFarms.Core.Models.Actuator", null)
                         .WithMany("Commands")
-                        .HasForeignKey("ActuatorId");
+                        .HasForeignKey("ActuatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Crop", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Crop", b =>
                 {
-                    b.HasOne("OnlyFarms.Models.FarmingCompany", null)
+                    b.HasOne("OnlyFarms.Core.Models.FarmingCompany", null)
                         .WithMany("Crops")
-                        .HasForeignKey("FarmingCompanyId");
+                        .HasForeignKey("FarmingCompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Measurement", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Measurement", b =>
                 {
-                    b.HasOne("OnlyFarms.Models.Sensor", null)
+                    b.HasOne("OnlyFarms.Core.Models.Sensor", null)
                         .WithMany("Measurements")
-                        .HasForeignKey("SensorId");
+                        .HasForeignKey("SensorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Reservation", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Reservation", b =>
                 {
-                    b.HasOne("OnlyFarms.Models.FarmingCompany", null)
+                    b.HasOne("OnlyFarms.Core.Models.FarmingCompany", null)
                         .WithMany("Reservations")
-                        .HasForeignKey("FarmingCompanyId");
+                        .HasForeignKey("FarmingCompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("OnlyFarms.Models.WaterCompany", null)
+                    b.HasOne("OnlyFarms.Core.Models.WaterCompany", null)
                         .WithMany("Reservations")
-                        .HasForeignKey("WaterCompanyId");
+                        .HasForeignKey("WaterCompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Sensor", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Sensor", b =>
                 {
-                    b.HasOne("OnlyFarms.Models.Crop", null)
+                    b.HasOne("OnlyFarms.Core.Models.Crop", null)
                         .WithMany("Sensors")
-                        .HasForeignKey("CropId");
+                        .HasForeignKey("CropId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.WaterUsage", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.WaterUsage", b =>
                 {
-                    b.HasOne("OnlyFarms.Models.FarmingCompany", null)
+                    b.HasOne("OnlyFarms.Core.Models.FarmingCompany", null)
                         .WithMany("WaterUsages")
-                        .HasForeignKey("FarmingCompanyId");
+                        .HasForeignKey("FarmingCompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Actuator", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Actuator", b =>
                 {
                     b.Navigation("Commands");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Crop", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Crop", b =>
                 {
                     b.Navigation("Actuators");
 
                     b.Navigation("Sensors");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.FarmingCompany", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.FarmingCompany", b =>
                 {
                     b.Navigation("Crops");
 
@@ -316,12 +352,12 @@ namespace OnlyFarms.RestApi.Migrations
                     b.Navigation("WaterUsages");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.Sensor", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Sensor", b =>
                 {
                     b.Navigation("Measurements");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Models.WaterCompany", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.WaterCompany", b =>
                 {
                     b.Navigation("Reservations");
                 });

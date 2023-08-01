@@ -58,3 +58,17 @@ Content-Type: application/json
 "address" : "Via SS. Giacomo e Filippo 7",
 "waterSupply" : 10000
 }
+
+### ===== Crops =====
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops
+Content-Type: application/json
+
+{
+  "tag" : "grano",
+  "surfaceArea" : 200,
+  "irrigationType" : "Traditional",
+  "waterNeeds" : 300,
+  "idealHumidity" : 65
+}

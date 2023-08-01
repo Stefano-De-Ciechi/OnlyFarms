@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using OnlyFarms.Core.Data;
 
-namespace OnlyFarms.Data;
+namespace OnlyFarms.RestApi.Data;
 
 /* classe da usare come repository solo all'interno del server che implementa la REST API */
 
@@ -46,8 +46,11 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
     public async Task<T?> Delete(int id)    // TODO questo metodo dovrebbe ritornare l'entità eliminata
     {
         var entity = await Get(id);
-        
-        if (entity == null) return null;
+
+        if (entity == null)
+        {
+            return null;
+        }
         
         _dataContext.Remove(entity);        // TODO verificare che vengano rimosse anche tutte le entita' collegate (es. se si cancella un azienda agricola devono essere eliminate anche tutte le sue coltivazioni, sensori, attuatori, prenotazioni, ...
         await _dataContext.SaveChangesAsync();
@@ -55,14 +58,8 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         return entity;
     }
 
-    public async Task<T?> Get(int id)
-    {
-        return await _dataContext.FindAsync<T>(id);
-    }
-
-    public IAsyncEnumerable<T> GetAll()
-    {
-        return _entities.AsAsyncEnumerable();
-    }
+    public async Task<T?> Get(int id) => await _dataContext.FindAsync<T>(id);
+    
+    public IAsyncEnumerable<T> GetAll() => _entities.AsAsyncEnumerable();
 
 }
