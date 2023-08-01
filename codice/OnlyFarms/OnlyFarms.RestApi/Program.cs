@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,9 +25,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-MapActuatorsRoutes();
-MapFarmingCompaniesRoutes();
-MapWaterCompaniesRoutes();
+//MapActuatorsRoutes();
+//MapFarmingCompaniesRoutes();
+//MapWaterCompaniesRoutes();
+MapCommonRoutes<FarmingCompany>("farmingCompanies");
+MapCommonRoutes<WaterCompany>("waterCompanies");
+MapCropsRoutes();
+MapCropComponentsRoutes<Actuator>("actuators");
+MapCropComponentsRoutes<Sensor>("sensors");
 
 app.Run();
 
@@ -59,7 +63,9 @@ void InjectRepositories(IServiceCollection services, ConfigurationManager config
 }
 
 // TODO per gli endpoint piu' "semplici" usare un metodo generico di mapping delle routes (come in DotNetShop)
+// TODO aggiungere i metodi di documentazione swagger a tutti gli endpoint
 
+/*
 void MapActuatorsRoutes()
 {
     var group = app.MapGroup($"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/actuators")
@@ -100,11 +106,14 @@ void MapActuatorsRoutes()
     group.MapPost("/", async ([FromServices] IRepository<Actuator> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromBody] Actuator actuator) =>
     {
         // TODO cercare di capire come avviene il collegamento tra questo attuatore e l'azienda e coltivazione passate come parametri
-        var res = await repository.Add(new Actuator { Tag = actuator.Tag });      // TODO ritornare l'ID dell'attuatore appena creato
-        return res;
-    });
+        var res = await repository.Add(new Actuator { Tag = actuator.Tag });
+        return Results.Created($"{ API_PREFIX }/farmingCompanies/{ companyId }/crops/{ cropId }/actuators/{ res?.Id }", res);
+    })
+        .Produces<Actuator>(201);
 }
+*/
 
+/*
 void MapFarmingCompaniesRoutes()
 {
     var group = app.MapGroup($"{API_PREFIX}/farmingCompanies")
@@ -121,8 +130,8 @@ void MapFarmingCompaniesRoutes()
 
     group.MapPost("/", async ([FromServices] IRepository<FarmingCompany> repository, [FromBody] FarmingCompany fc) =>
     {
-        var id = await repository.Add(new FarmingCompany { Address = fc.Address, Name = fc.Name, WaterSupply = fc.WaterSupply});
-        return id;
+        var res = await repository.Add(new FarmingCompany { Address = fc.Address, Name = fc.Name, WaterSupply = fc.WaterSupply});
+        return Results.Created($"{ API_PREFIX }/farmingCompanies/{ res?.Id }", res);
     })
         .Produces<FarmingCompany>(201);
 }
@@ -149,3 +158,142 @@ void MapWaterCompaniesRoutes()
     })
         .Produces<WaterCompany>(201);
 }
+*/
+
+void MapCommonRoutes<T>(string routeName) where T : class, IHasId
+{
+    var fullRoute = $"{API_PREFIX}/{routeName}";
+    var group = app.MapGroup(fullRoute)
+        .WithTags(routeName);
+    
+    // GET all
+    group.MapGet("/", ([FromServices] IRepository<T> repository) => repository.GetAll());
+
+    // GET single
+    group.MapGet("/{id:int}", async ([FromServices] IRepository<T> repository, int id) =>
+    {
+        var res = await repository.Get(id);
+        //return res == null ? Results.NotFound($"no resource of type '{ typeof(T).Name }' with ID = { id }") : Results.Ok(res);
+        //return CheckResourceExists(res, id, Results.Ok(res));
+        return res == null ? ResourceNotFound<T>(id) : Results.Ok(res);
+    });
+
+    // POST
+    group.MapPost("/", async ([FromServices] IRepository<T> repository, [FromBody] T newResource) =>
+    {
+        var res = await repository.Add(newResource);
+        
+        return res == null ? Results.BadRequest($"missing parameters for a resource of type { nameof(T) }") : Results.Created($"{fullRoute}/{res.Id}", res);     // Results.Created imposta nell'Header della Response anche la locazione della nuova risorsa
+    });
+
+    // PUT
+
+    // DELETE
+}
+
+// TODO ripensare a tutte le chiavi composte, vedi https://learn.microsoft.com/en-us/ef/core/modeling/keys?tabs=data-annotations e rigenerare una migrazione del DB
+void MapCropsRoutes()
+{
+    var fullRoute = $"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops";
+    var group = app.MapGroup(fullRoute)
+        .WithTags("crops");
+    
+    // GET all
+    group.MapGet("/", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId) =>
+    {
+        var company = await repository.Get(companyId);
+        return company == null ? ResourceNotFound<FarmingCompany>(companyId) : Results.Ok(company.Crops);
+    });
+    
+    // GET single
+    group.MapGet("/{id:int}", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId, [FromRoute] int id) =>
+    {
+        var company = await repository.Get(companyId);
+        if (company == null)
+        {
+            return ResourceNotFound<FarmingCompany>(companyId);
+        }
+
+        var crop = company.Crops.Find(id);
+        return crop == null ? ResourceNotFound<Crop>(id) : Results.Ok(company.Crops.Find(id));
+    });
+    
+    // POST
+    /*group.MapPost("/", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId, [FromBody] Crop crop) =>
+    {
+        var company = await repository.Get(companyId);
+        if (company == null)
+        {
+            return ResourceNotFound<FarmingCompany>(companyId);
+        }
+
+        company.Crops.Add(crop);
+
+        return Results.Created(fullRoute, crop);
+    });*/
+
+    group.MapPost("/", async ([FromServices] IRepository<Crop> repository, [FromRoute] int companyId, [FromBody] Crop crop) =>
+    {
+        await repository.Add(crop);
+        return Results.Created($"{fullRoute}/{crop.Id}", crop);
+    });
+
+}
+
+// TODO creare delle routes generiche per Attuatori e Sensori (ad entrambe serve l'ID di un azienda agricola e di un campo)
+void MapCropComponentsRoutes<T>(string routeName) where T : class, IHasId
+{
+    var fullRoute = $"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/{routeName}";
+    var group = app.MapGroup((fullRoute))
+        .WithTags(routeName);
+    
+    // GET all
+    group.MapGet("/", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId, [FromRoute] int cropId) =>
+    {
+        var company = await repository.Get(companyId);
+        return GetCropComponents<T>(company, companyId, cropId, null);  // con id = null viene restituita una lista (anche vuota) di risorse
+    });
+    
+    // GET single
+    group.MapGet("/{id:int}", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
+    {
+        var company = await repository.Get(companyId);
+        return GetCropComponents<T>(company, companyId, cropId, id);    // con id valorizzato viene restituita una singola risorsa
+    });
+    
+    // POST
+    
+    // DELETE
+}
+
+IResult GetCropComponents<T>(FarmingCompany? company, int companyId, int cropId, int? id)
+{
+    if (company == null)
+    {
+        //return Results.NotFound($"no resource of type '{nameof(FarmingCompany)}' with ID = { companyId }");
+        return ResourceNotFound<FarmingCompany>(companyId);
+    }
+
+    var crop = company.Crops.Find(cropId);
+    if (crop == null)
+    {
+        //return Results.NotFound($"no resource of type '{ nameof(Crop) }' with ID = { cropId }");
+        return ResourceNotFound<Crop>(cropId);
+    }
+    
+    // sfruttata switched expression + pattern matching (sul tipo dell'oggetto generico T)
+    return typeof(T) switch
+    {
+        /*var type when type == typeof(Actuator) => Results.Ok(crop.Actuators.Find(id)),
+        var type when type == typeof(Sensor) => Results.Ok(crop.Sensors),*/
+        
+        // se viene passato un ID si restituisce un un'unica istanza della risorsa cercata, altrimenti si restituisce la lista completa
+        // TODO ma se non esiste la risorsa non viene lanciato un errore 404!
+        var type when type == typeof(Actuator) => id == null ? Results.Ok(crop.Actuators) : Results.Ok(crop.Actuators.Find((int) id)),
+        var type when type == typeof(Sensor) => id == null ? Results.Ok(crop.Sensors) : Results.Ok(crop.Sensors.Find((int) id)),
+        _ => Results.StatusCode(500)
+    };
+}
+
+//IResult CheckResourceExists<T>(T? resource, int id, IResult ok) => resource == null ? Results.NotFound($"no resource of type '{nameof(T)}' with ID = {id}") : ok;
+IResult ResourceNotFound<T>(int id) => Results.NotFound($"no resource of type '{ typeof(T).Name }' with ID = { id }");
