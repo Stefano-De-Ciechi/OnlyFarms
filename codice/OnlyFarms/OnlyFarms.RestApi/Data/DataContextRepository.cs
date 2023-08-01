@@ -35,6 +35,8 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
             return null;
         }
 
+        updatedItem.Id = entity.Id;     // aggiunto per non ricevere un errore del tipo "the property is part of a key and so cannot be modified or marked as modified ..."
+        
         _entities.Entry(entity).CurrentValues.SetValues(updatedItem);
         await _dataContext.SaveChangesAsync();
         
@@ -47,7 +49,7 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         
         if (entity == null) return null;
         
-        _dataContext.Remove(entity);
+        _dataContext.Remove(entity);        // TODO verificare che vengano rimosse anche tutte le entita' collegate (es. se si cancella un azienda agricola devono essere eliminate anche tutte le sue coltivazioni, sensori, attuatori, prenotazioni, ...
         await _dataContext.SaveChangesAsync();
         
         return entity;

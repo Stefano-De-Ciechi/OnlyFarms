@@ -13,7 +13,7 @@ public class FarmingCompany : IHasId      // entita' Azienda Agricola
     public required string Name { get; set; }
     public required string City { get; set; }       // TODO aggiungere citta' ai diagrammi UML
     public required string Address { get; set; }
-    public required float WaterSupply { get; set; }
+    public float WaterSupply { get; set; } = 0;     // TODO capire se ha senso cosi' o se e' meglio assegnare all'interno della POST request (ri-aggiungere required in quel caso)
     public string UniqueCompanyCode { get; init; } = Guid.NewGuid().ToString();     // da usare durante la fase di registrazione (ogni utente inserisce il codice della propria azienda)
     
     // riferimenti a prenotazioni, consumi e coltivazioni

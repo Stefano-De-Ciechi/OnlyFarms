@@ -1,0 +1,60 @@
+# ATTENZIONE: Questo file e' da eseguire solamente dopo che si applica una migrazione al DB e si resettano i dati per riempire nuovamente le tabelle
+
+### ===== Farming Companies =====
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies
+Content-Type: application/json
+// potrebbe essere necessario ri-aggiungere il campo waterSupply
+
+{
+  "name": "Colle Spadaro di Vivenzio Antonio",
+  "city": "Napoli",
+  "address" : "Via Vicinale Spadari 13"
+}
+
+### ===== Water Companies =====
+
+###
+POST https://localhost:7058/api/v1/waterCompanies
+Content-Type: application/json
+
+{
+  "name": "ABC Napoli",
+  "city": "Napoli",
+  "address" : "Via Argine 929",
+  "waterSupply" : 10000
+}
+
+###
+POST https://localhost:7058/api/v1/waterCompanies
+Content-Type: application/json
+
+{
+"name": "MM Spa",
+"city": "Milano",
+"address" : "Via del Vecchio Politecnico 8",
+"waterSupply" : 12000
+}
+
+###
+POST https://localhost:7058/api/v1/waterCompanies
+Content-Type: application/json
+
+{
+  "name": "Acea Spa",
+  "city": "Roma",
+  "address" : "Piazzale Ostinense 2",
+  "waterSupply" : 15000
+}
+
+###
+POST https://localhost:7058/api/v1/waterCompanies
+Content-Type: application/json
+
+{
+"name": "Iren Acqua Spa",
+"city": "Genova",
+"address" : "Via SS. Giacomo e Filippo 7",
+"waterSupply" : 10000
+}
