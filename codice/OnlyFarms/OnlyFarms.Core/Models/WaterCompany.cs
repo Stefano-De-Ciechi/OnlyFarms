@@ -3,15 +3,14 @@ namespace OnlyFarms.Models;
 
 public class WaterCompany : IHasId      // entita' Azienda Idrica
 {
-    public WaterCompany()
-    {
-        Reservations = new List<Reservation>();
-    }
-
     public int Id { get; set; }
     public required string Name { get; set; }
-    public required string Address { get; set; }    // TODO aggiungere il campo Citta' separato da indirizzo (per avere una ricerca più semplice)
-    public ICollection<Reservation> Reservations { get; init; }
+    public required string City { get; set; }       // TODO aggiungere il campo citta' ai diagrammi UML
+    public required string Address { get; set; }
+    
     public required float WaterSupply { get; set; }
     public string UniqueCompanyCode { get; init; } = Guid.NewGuid().ToString();     // da usare durante la fase di registrazione (ogni utente inserisce il codice della propria azienda)
+    
+    // riferimento alle prenotazioni
+    public ICollection<Reservation> Reservations { get; init; } = new List<Reservation>();
 }

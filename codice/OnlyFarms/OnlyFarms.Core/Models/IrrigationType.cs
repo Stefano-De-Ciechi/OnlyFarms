@@ -1,6 +1,9 @@
-﻿namespace OnlyFarms.Models;
+﻿using System.Text.Json.Serialization;
 
+namespace OnlyFarms.Models;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]    // attributo usato per poter leggere i valori dell'enum in formato stringa dal body delle richieste HTTP
 public enum IrrigationType
 {
-    TraditionalIrrigation, DropIrrigation       // irrigazione tradizionale e irrigazione "goccia a goccia"
+    Traditional, Drip       // irrigazione tradizionale e irrigazione "goccia a goccia"
 }

@@ -9,19 +9,15 @@ namespace OnlyFarms.Models;
 */
 public class FarmingCompany : IHasId      // entita' Azienda Agricola
 {
-    public FarmingCompany()
-    { 
-        Crops = new List<Crop>();
-        WaterUsages = new List<WaterUsage>();
-        Reservations = new List<Reservation>();
-    }
-
     public int Id { get; set; }
     public required string Name { get; set; }
-    public required string Address { get; set; }    // TODO aggiungere il campo Citta' separato da indirizzo (per avere una ricerca più semplice)
-    public ICollection<Reservation> Reservations { get; init; }
+    public required string City { get; set; }       // TODO aggiungere citta' ai diagrammi UML
+    public required string Address { get; set; }
     public required float WaterSupply { get; set; }
     public string UniqueCompanyCode { get; init; } = Guid.NewGuid().ToString();     // da usare durante la fase di registrazione (ogni utente inserisce il codice della propria azienda)
-    public ICollection<WaterUsage> WaterUsages { get; init; }    // consumi idrici
-    public ICollection<Crop> Crops { get; init; }   // coltivazioni
+    
+    // riferimenti a prenotazioni, consumi e coltivazioni
+    public ICollection<Reservation> Reservations { get; init; } = new List<Reservation>();
+    public ICollection<WaterUsage> WaterUsages { get; init; } = new List<WaterUsage>();    // consumi idrici
+    public ICollection<Crop> Crops { get; init; } = new List<Crop>(); // coltivazioni
 }

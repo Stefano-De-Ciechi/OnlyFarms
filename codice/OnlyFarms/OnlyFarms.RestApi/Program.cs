@@ -234,6 +234,7 @@ void MapCropsRoutes()
 
     group.MapPost("/", async ([FromServices] IRepository<Crop> repository, [FromRoute] int companyId, [FromBody] Crop crop) =>
     {
+        crop.FarmingCompanyId = companyId;
         await repository.Add(crop);
         return Results.Created($"{fullRoute}/{crop.Id}", crop);
     });
