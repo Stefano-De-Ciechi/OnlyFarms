@@ -31,6 +31,8 @@ app.UseHttpsRedirection();
 MapCommonRoutes<FarmingCompany>("farmingCompanies");
 MapCommonRoutes<WaterCompany>("waterCompanies");
 MapCropsRoutes();
+MapCropComponentsRoutes<Actuator>("actuators");
+MapCropComponentsRoutes<Sensor>("sensors");
 /*MapCropComponentsRoutes<Actuator>("actuators");
 MapCropComponentsRoutes<Sensor>("sensors");*/
 
@@ -51,16 +53,16 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
 
     // TODO rivedere questa parte, non so se vadano aggiunte tutte queste repository o meno (o se ne servano altre) --> e' meglio aggiungere repository di tipo diverso in base all'entita' coinvolta (vedi DotNetShop come esempio)
     // molte di queste entita' NON devono implementare tutte le operazioni (get, getAll, add, update e delete), quindi potrebbero essere necessarie delle repository diverse
-    //services.AddScoped<IRepository<Actuator>>(_ => new DataContextRepository<Actuator>(dataContext));
     //services.AddScoped<IRepository<ActuatorCommand>>(_ => new DataContextRepository<ActuatorCommand>(dataContext));
     //services.AddScoped<IRepository<Measurement>>(_ => new DataContextRepository<Measurement>(dataContext));
     //services.AddScoped<IRepository<Reservation>>(_ => new DataContextRepository<Reservation>(dataContext));
-    //services.AddScoped<IRepository<Sensor>>(_ => new DataContextRepository<Sensor>(dataContext));
     //services.AddScoped<IRepository<WaterUsage>>(_ => new DataContextRepository<WaterUsage>(dataContext));
     
     services.AddScoped<IRepository<FarmingCompany>>(_ => new DataContextRepository<FarmingCompany>(dataContext));
     services.AddScoped<IRepository<WaterCompany>>(_ => new DataContextRepository<WaterCompany>(dataContext));
     services.AddScoped<ICropRepository>(_ => new CropRepository(dataContext));
+    services.AddScoped<ICropComponentRepository<Actuator>>(_ => new CropComponentRepository<Actuator>(dataContext));
+    services.AddScoped<ICropComponentRepository<Sensor>>(_ => new CropComponentRepository<Sensor>(dataContext));
 
 }
 
@@ -126,7 +128,7 @@ void MapCropsRoutes()
     // POST
     group.MapPost("/", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromBody] Crop crop) =>
     {
-        var res = await repository.Add(companyId, crop);
+        var res = await repository.Add(companyId, crop);    // TODO gestire eccezione
         return res == null ? MissingParameters<Crop>() : ResourceCreated(fullRoute, res);
     });
     
@@ -145,57 +147,46 @@ void MapCropsRoutes()
     });
 }
 
-/*
-// TODO creare delle routes generiche per Attuatori e Sensori (ad entrambe serve l'ID di un azienda agricola e di un campo)
-void MapCropComponentsRoutes<T>(string routeName) where T : class, IHasId
+void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponent
 {
     var fullRoute = $"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/{routeName}";
     var group = app.MapGroup((fullRoute))
         .WithTags(routeName);
     
     // GET all
-    group.MapGet("/", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId, [FromRoute] int cropId) =>
-    {
-        var company = await repository.Get(companyId);
-        return GetCropComponents<T>(company, companyId, cropId, null);  // con id = null viene restituita una lista (anche vuota) di risorse
-    });
+    group.MapGet("/", ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId) => repository.GetAll(companyId, cropId));
     
     // GET single
-    group.MapGet("/{id:int}", async ([FromServices] IRepository<FarmingCompany> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
+    group.MapGet("/{id:int}", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
     {
-        var company = await repository.Get(companyId);
-        return GetCropComponents<T>(company, companyId, cropId, id);    // con id valorizzato viene restituita una singola risorsa
+        var res = await repository.Get(companyId, cropId, id);
+        return res == null ? ResourceNotFound<T>(id) : Results.Ok(res);
     });
     
     // POST
+    group.MapPost("/", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromBody] T component) =>
+    {
+        try
+        {
+            var res = await repository.Add(companyId, cropId, component); // TODO gestire eccezione
+            return res == null ? MissingParameters<T>() : ResourceCreated(fullRoute, res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return Results.NotFound(e.Message);
+        }
+        
+    });
     
     // DELETE
+    group.MapDelete("/{id:int}", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
+    {
+        var res = await repository.Delete(companyId, cropId, id);
+        return res == null ? ResourceNotFound<Crop>(id) : Results.Ok(res);
+    });
 }
-
-IResult GetCropComponents<T>(FarmingCompany? company, int companyId, int cropId, int? id)
-{
-    if (company == null)
-    {
-        return ResourceNotFound<FarmingCompany>(companyId);
-    }
-
-    var crop = company.Crops.Find(cropId);
-    if (crop == null)
-    {
-        return ResourceNotFound<Crop>(cropId);
-    }
-    
-    // sfruttata switched expression + pattern matching (sul tipo dell'oggetto generico T)
-    return typeof(T) switch
-    {
-        // se viene passato un ID si restituisce un un'unica istanza della risorsa cercata, altrimenti si restituisce la lista completa
-        // TODO ma se non esiste la risorsa non viene lanciato un errore 404!
-        var type when type == typeof(Actuator) => id == null ? Results.Ok(crop.Actuators) : Results.Ok(crop.Actuators.Find((int) id)),
-        var type when type == typeof(Sensor) => id == null ? Results.Ok(crop.Sensors) : Results.Ok(crop.Sensors.Find((int) id)),
-        _ => Results.StatusCode(500)
-    };
-}*/
 
 IResult ResourceCreated<T>(string route, T resource) where T : IHasId => Results.Created($"{ route }/{ resource.Id }", resource);
 IResult ResourceNotFound<T>(int id) => Results.NotFound($"no resource of type '{ typeof(T).Name }' with ID = { id }");
+//IResult ResourceNotFound(KeyNotFoundException e) => Results.NotFound(e.Message);
 IResult MissingParameters<T>() => Results.BadRequest($"missing parameters for a resource of type { nameof(T) }");       // in realta' questa funzione non viene mai lanciata, perche' in caso di parametri mancanti dotnet lancia in automatico un'eccezione con stato 500 o 505 con la lista di parametri mancanti (oltre allo stack di eccezioni

@@ -8,7 +8,6 @@ namespace OnlyFarms.RestApi.Data;
 public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
 {
     private readonly DbContext _dataContext;
-
     private readonly DbSet<T> _entities;
 
     public DataContextRepository(DbContext dataContext)

@@ -21,7 +21,7 @@ public class CropRepository : ICropRepository
         var company = await _context.FarmingCompanies.FirstOrDefaultAsync(f => f.Id == farmingCompanyId);
         if (company == null)
         {
-            return null;
+            throw new KeyNotFoundException($"no resource of type '{ nameof(FarmingCompany) }' with ID = { farmingCompanyId }");       // TODO pensare ad un meccanismo di gestione delle eccezioni se si passa un id di una azienda agricola non esistente
         }
 
         crop.FarmingCompanyId = farmingCompanyId;
