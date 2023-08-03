@@ -66,8 +66,8 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
 
 }
 
-// TODO per gli endpoint piu' "semplici" usare un metodo generico di mapping delle routes (come in DotNetShop)
 // TODO aggiungere i metodi di documentazione swagger a tutti gli endpoint
+// TODO ripensare a tutte le chiavi composte, vedi https://learn.microsoft.com/en-us/ef/core/modeling/keys?tabs=data-annotations e rigenerare una migrazione del DB
 
 void MapCommonRoutes<T>(string routeName) where T : class, IHasId
 {
@@ -81,33 +81,59 @@ void MapCommonRoutes<T>(string routeName) where T : class, IHasId
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] IRepository<T> repository, int id) =>
     {
-        var res = await repository.Get(id);
-        return res == null ? ResourceNotFound<T>(id) : Results.Ok(res);
+        try
+        {
+            var res = await repository.Get(id);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
 
     // POST
     group.MapPost("/", async ([FromServices] IRepository<T> repository, [FromBody] T newResource) =>
     {
-        var res = await repository.Add(newResource);
-        return res == null ? MissingParameters<T>() : ResourceCreated(fullRoute, res);     // Results.Created imposta nell'Header della Response anche la locazione della nuova risorsa
+        try
+        {
+            var res = await repository.Add(newResource);
+            return ResourceCreated(fullRoute, res); // Results.Created imposta nell'Header della Response anche la locazione della nuova risorsa
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
 
     // PUT
     group.MapPut("/{id:int}", async ([FromServices] IRepository<T> repository, [FromRoute] int id, [FromBody] T updatedResource) =>
     {
-        var res = await repository.Update(id, updatedResource);
-        return res == null ? ResourceNotFound<T>(id) : Results.Ok(res);
+        try
+        {
+            var res = await repository.Update(id, updatedResource);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
 
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] IRepository<T> repository, [FromRoute] int id) =>
     {
-        var res = await repository.Delete(id);
-        return res == null ? ResourceNotFound<T>(id) : Results.Ok(res);
+        try
+        {
+            var res = await repository.Delete(id);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
 }
-
-// TODO ripensare a tutte le chiavi composte, vedi https://learn.microsoft.com/en-us/ef/core/modeling/keys?tabs=data-annotations e rigenerare una migrazione del DB
 
 void MapCropsRoutes()
 {
@@ -116,34 +142,73 @@ void MapCropsRoutes()
         .WithTags("crops");
     
     // GET all
-    group.MapGet("/", ([FromServices] ICropRepository repository, [FromRoute] int companyId) => repository.GetAll(companyId));
+    group.MapGet("/", ([FromServices] ICropRepository repository, [FromRoute] int companyId) =>
+    {
+        try
+        {
+            var res = repository.GetAll(companyId);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
+    });
 
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
     {
-        var crop = await repository.Get(companyId, id);
-        return crop == null ? ResourceNotFound<Crop>(id) : Results.Ok(crop);
+        try
+        {
+            var crop = await repository.Get(companyId, id);
+            return Results.Ok(crop);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
     
     // POST
     group.MapPost("/", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromBody] Crop crop) =>
     {
-        var res = await repository.Add(companyId, crop);    // TODO gestire eccezione
-        return res == null ? MissingParameters<Crop>() : ResourceCreated(fullRoute, res);
+        try
+        {
+            var res = await repository.Add(companyId, crop); // TODO gestire eccezione
+            return ResourceCreated(fullRoute, res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
     
     // PUT
     group.MapPut("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id, [FromBody] Crop updatedCrop) =>
     {
-        var res = await repository.Update(companyId, id, updatedCrop);
-        return res == null ? ResourceNotFound<Crop>(id) : Results.Ok(res);
+        try
+        {
+            var res = await repository.Update(companyId, id, updatedCrop);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
     
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
     {
-        var res = await repository.Delete(companyId, id);
-        return res == null ? ResourceNotFound<Crop>(id) : Results.Ok(res);
+        try
+        {
+            var res = await repository.Delete(companyId, id);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
 }
 
@@ -154,13 +219,32 @@ void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponen
         .WithTags(routeName);
     
     // GET all
-    group.MapGet("/", ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId) => repository.GetAll(companyId, cropId));
+    group.MapGet("/", ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId) =>
+    {
+        try
+        {
+            var res = repository.GetAll(companyId, cropId);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
+        
+    });
     
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
     {
-        var res = await repository.Get(companyId, cropId, id);
-        return res == null ? ResourceNotFound<T>(id) : Results.Ok(res);
+        try
+        {
+            var res = await repository.Get(companyId, cropId, id);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
     
     // POST
@@ -169,24 +253,28 @@ void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponen
         try
         {
             var res = await repository.Add(companyId, cropId, component); // TODO gestire eccezione
-            return res == null ? MissingParameters<T>() : ResourceCreated(fullRoute, res);
+            return ResourceCreated(fullRoute, res);
         }
         catch (KeyNotFoundException e)
         {
-            return Results.NotFound(e.Message);
+            return ResourceNotFound(e);
         }
-        
     });
     
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
     {
-        var res = await repository.Delete(companyId, cropId, id);
-        return res == null ? ResourceNotFound<Crop>(id) : Results.Ok(res);
+        try
+        {
+            var res = await repository.Delete(companyId, cropId, id);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
     });
 }
 
 IResult ResourceCreated<T>(string route, T resource) where T : IHasId => Results.Created($"{ route }/{ resource.Id }", resource);
-IResult ResourceNotFound<T>(int id) => Results.NotFound($"no resource of type '{ typeof(T).Name }' with ID = { id }");
-//IResult ResourceNotFound(KeyNotFoundException e) => Results.NotFound(e.Message);
-IResult MissingParameters<T>() => Results.BadRequest($"missing parameters for a resource of type { nameof(T) }");       // in realta' questa funzione non viene mai lanciata, perche' in caso di parametri mancanti dotnet lancia in automatico un'eccezione con stato 500 o 505 con la lista di parametri mancanti (oltre allo stack di eccezioni
+IResult ResourceNotFound(KeyNotFoundException e) => Results.NotFound(e.Message);     // TODO rinominare

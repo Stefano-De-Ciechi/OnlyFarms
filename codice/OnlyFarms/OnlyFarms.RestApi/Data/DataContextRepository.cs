@@ -3,8 +3,6 @@ using OnlyFarms.Core.Data;
 
 namespace OnlyFarms.RestApi.Data;
 
-/* classe da usare come repository solo all'interno del server che implementa la REST API */
-
 public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
 {
     private readonly DbContext _dataContext;
@@ -18,7 +16,20 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         _entities = _dataContext.Set<T>();
     }
 
-    public async Task<T?> Add(T entity)     // TODO questo metodo dovrebbe ritornare l'ID dell'entità inserita
+    public IAsyncEnumerable<T> GetAll() => _entities.AsAsyncEnumerable();
+    
+    public async Task<T> Get(int id)
+    {   
+        var res = await _dataContext.FindAsync<T>(id);
+        if (res == null)
+        {
+            throw new KeyNotFoundException($"no resource of type '{ typeof(T).Name }' with ID = { id }");
+        }
+
+        return res;
+    }
+    
+    public async Task<T> Add(T entity)     // TODO questo metodo dovrebbe ritornare l'ID dell'entità inserita
     {
         await _entities.AddAsync(entity);
         await _dataContext.SaveChangesAsync();
@@ -26,14 +37,10 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         return entity;
     }
 
-    public async Task<T?> Update(int id, T updatedItem)     // TODO testare che questa funzione di modifica funzioni correttamente!
+    public async Task<T> Update(int id, T updatedItem)     // TODO testare che questa funzione di modifica funzioni correttamente!
     {
         var entity = await Get(id);
-        if (entity == null)
-        {
-            return null;
-        }
-
+        
         updatedItem.Id = entity.Id;     // aggiunto per non ricevere un errore del tipo "the property is part of a key and so cannot be modified or marked as modified ..."
         
         _entities.Entry(entity).CurrentValues.SetValues(updatedItem);
@@ -42,23 +49,13 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         return updatedItem;
     }
 
-    public async Task<T?> Delete(int id)    // TODO questo metodo dovrebbe ritornare l'entità eliminata
+    public async Task<T> Delete(int id)    // TODO questo metodo dovrebbe ritornare l'entità eliminata
     {
         var entity = await Get(id);
-
-        if (entity == null)
-        {
-            return null;
-        }
         
         _dataContext.Remove(entity);        // TODO verificare che vengano rimosse anche tutte le entita' collegate (es. se si cancella un azienda agricola devono essere eliminate anche tutte le sue coltivazioni, sensori, attuatori, prenotazioni, ...
         await _dataContext.SaveChangesAsync();
         
         return entity;
     }
-
-    public async Task<T?> Get(int id) => await _dataContext.FindAsync<T>(id);
-    
-    public IAsyncEnumerable<T> GetAll() => _entities.AsAsyncEnumerable();
-
 }

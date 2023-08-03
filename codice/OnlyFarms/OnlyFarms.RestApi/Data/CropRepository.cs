@@ -8,15 +8,35 @@ namespace OnlyFarms.RestApi.Data;
 public class CropRepository : ICropRepository
 {
     private readonly DataContext _context;
-    
+
     public CropRepository(DataContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        
+
         _context = context;
     }
+
+    public IAsyncEnumerable<Crop> GetAll(int farmingCompanyId)
+    {
+        _CheckResourceExistence<FarmingCompany>(farmingCompanyId);
+        
+        return _context.Crops.Where(c => c.FarmingCompanyId == farmingCompanyId).AsAsyncEnumerable();
+    }
+
+    public async Task<Crop> Get(int farmingCompanyId, int cropId)
+    {
+        _CheckResourceExistence<FarmingCompany>(farmingCompanyId);
+        
+        var res = await _context.Crops.FirstOrDefaultAsync(c => c.Id == cropId && c.FarmingCompanyId == farmingCompanyId);
+        if (res == null)
+        {
+            throw new KeyNotFoundException($"no resource of type '{ nameof(Crop) }' with ID = { cropId }");
+        }
+
+        return res;
+    }
     
-    public async Task<Crop?> Add(int farmingCompanyId, Crop crop)
+    public async Task<Crop> Add(int farmingCompanyId, Crop crop)
     {
         var company = await _context.FarmingCompanies.FirstOrDefaultAsync(f => f.Id == farmingCompanyId);
         if (company == null)
@@ -33,12 +53,12 @@ public class CropRepository : ICropRepository
         return crop;
     }
 
-    public async Task<Crop?> Update(int farmingCompanyId, int cropId, Crop cropUpdate)
+    public async Task<Crop> Update(int farmingCompanyId, int cropId, Crop cropUpdate)
     {
         var crop = await Get(farmingCompanyId, cropId);
         if (crop == null)
         {
-            return null;
+            throw new KeyNotFoundException($"no resource of type '{ nameof(Crop) }' with ID = { cropId }");
         }
 
         cropUpdate.Id = crop.Id;
@@ -60,24 +80,30 @@ public class CropRepository : ICropRepository
         return cropUpdate;
     }
 
-    public async Task<Crop?> Delete(int farmingCompanyId, int cropId)
+    public async Task<Crop> Delete(int farmingCompanyId, int cropId)
     {
         var crop = await Get(farmingCompanyId, cropId);
         if (crop == null)
         {
-            return null;
+            throw new KeyNotFoundException($"no resource of type '{ nameof(Crop) }' with ID = { cropId }");
         }
 
         _context.Remove(crop);      // TODO verificare che vengano eliminati dal DB anche tutte le entita' legate alla coltivazione (es. sensori, attuatori, ...)
+        
         var company = await _context.FarmingCompanies.FindAsync(farmingCompanyId);
         company!.WaterSupply -= crop.WaterNeeds;    // TODO rimuovere se questo non e' il comportamento voluto
+        
         await _context.SaveChangesAsync();
 
         return crop;
     }
-
-    public Task<Crop?> Get(int farmingCompanyId, int cropId) => _context.Crops.FirstOrDefaultAsync(c => c.Id == cropId && c.FarmingCompanyId == farmingCompanyId);
-
-    public IAsyncEnumerable<Crop> GetAll(int farmingCompanyId) => _context.Crops.Where(c => c.FarmingCompanyId == farmingCompanyId).AsAsyncEnumerable();
     
+    private void _CheckResourceExistence<TR>(int id) where TR : class, IHasId
+    {
+        var resource = _context.Find<TR>(id);
+        if (resource == null)
+        {
+            throw new KeyNotFoundException($"no resource of type '{ typeof(TR).Name }' with ID = { id }");
+        }
+    }
 }

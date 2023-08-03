@@ -72,3 +72,14 @@ Content-Type: application/json
   "waterNeeds" : 300,
   "idealHumidity" : 65
 }
+
+### ===== Actuators =====
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators
+Content-Type: application/json
+
+{
+  "actuatorType" : "Sprinkler",
+  "tag" : "irrigatore nord"
+}
