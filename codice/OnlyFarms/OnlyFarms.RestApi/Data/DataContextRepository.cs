@@ -20,7 +20,7 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
     
     public async Task<T> Get(int id)
     {   
-        var res = await _dataContext.FindAsync<T>(id);
+        var res = await _entities.FindAsync(id);
         if (res == null)
         {
             throw new KeyNotFoundException($"no resource of type '{ typeof(T).Name }' with ID = { id }");

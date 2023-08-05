@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlyFarms.Core.Data;
+using OnlyFarms.Core.Infrastructure;
 using OnlyFarms.Core.Models;
 using OnlyFarms.RestApi.Data;
 
@@ -33,8 +34,8 @@ MapCommonRoutes<WaterCompany>("waterCompanies");
 MapCropsRoutes();
 MapCropComponentsRoutes<Actuator>("actuators");
 MapCropComponentsRoutes<Sensor>("sensors");
-/*MapCropComponentsRoutes<Actuator>("actuators");
-MapCropComponentsRoutes<Sensor>("sensors");*/
+MapCropComponentsPropertiesRoutes<Actuator, ActuatorCommand>("actuatorCommands");
+MapCropComponentsPropertiesRoutes<Sensor, Measurement>("measurements");
 
 app.Run();
 
@@ -50,20 +51,18 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     //dataContext.Database.EnsureCreated();     // rimosso perche' ri-creava il DB ogni volta che si provava ad eseguire una migrazione, comportando poi degli errori (Tabelle gia' esistenti) quando si eseguiva il comando "database update"
 
     services.AddScoped<DataContext>(_ => dataContext);
-
-    // TODO rivedere questa parte, non so se vadano aggiunte tutte queste repository o meno (o se ne servano altre) --> e' meglio aggiungere repository di tipo diverso in base all'entita' coinvolta (vedi DotNetShop come esempio)
-    // molte di queste entita' NON devono implementare tutte le operazioni (get, getAll, add, update e delete), quindi potrebbero essere necessarie delle repository diverse
-    //services.AddScoped<IRepository<ActuatorCommand>>(_ => new DataContextRepository<ActuatorCommand>(dataContext));
-    //services.AddScoped<IRepository<Measurement>>(_ => new DataContextRepository<Measurement>(dataContext));
+    
     //services.AddScoped<IRepository<Reservation>>(_ => new DataContextRepository<Reservation>(dataContext));
     //services.AddScoped<IRepository<WaterUsage>>(_ => new DataContextRepository<WaterUsage>(dataContext));
     
+    // TODO gestire eccezioni in tutte le repository come in ICropComponentPropertyRepository
     services.AddScoped<IRepository<FarmingCompany>>(_ => new DataContextRepository<FarmingCompany>(dataContext));
     services.AddScoped<IRepository<WaterCompany>>(_ => new DataContextRepository<WaterCompany>(dataContext));
     services.AddScoped<ICropRepository>(_ => new CropRepository(dataContext));
     services.AddScoped<ICropComponentRepository<Actuator>>(_ => new CropComponentRepository<Actuator>(dataContext));
     services.AddScoped<ICropComponentRepository<Sensor>>(_ => new CropComponentRepository<Sensor>(dataContext));
-
+    services.AddScoped<ICropComponentPropertyRepository<ActuatorCommand>>(serviceProvider => new CropComponentPropertyRepository<Actuator, ActuatorCommand>(dataContext, serviceProvider.GetRequiredService<ICropComponentRepository<Actuator>>()));
+    services.AddScoped<ICropComponentPropertyRepository<Measurement>>(serviceProvider => new CropComponentPropertyRepository<Sensor, Measurement>(dataContext, serviceProvider.GetRequiredService<ICropComponentRepository<Sensor>>()));
 }
 
 // TODO aggiungere i metodi di documentazione swagger a tutti gli endpoint
@@ -73,7 +72,7 @@ void MapCommonRoutes<T>(string routeName) where T : class, IHasId
 {
     var fullRoute = $"{API_PREFIX}/{ routeName }";
     var group = app.MapGroup(fullRoute)
-        .WithTags(routeName);
+        .WithTags(routeName.Capitalize());
     
     // GET all
     group.MapGet("/", ([FromServices] IRepository<T> repository) => repository.GetAll());
@@ -139,7 +138,7 @@ void MapCropsRoutes()
 {
     const string fullRoute = $"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/crops";
     var group = app.MapGroup(fullRoute)
-        .WithTags("crops");
+        .WithTags("Crops");
     
     // GET all
     group.MapGet("/", ([FromServices] ICropRepository repository, [FromRoute] int companyId) =>
@@ -215,8 +214,8 @@ void MapCropsRoutes()
 void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponent
 {
     var fullRoute = $"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/{routeName}";
-    var group = app.MapGroup((fullRoute))
-        .WithTags(routeName);
+    var group = app.MapGroup(fullRoute)
+        .WithTags(routeName.Capitalize());
     
     // GET all
     group.MapGet("/", ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId) =>
@@ -268,6 +267,55 @@ void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponen
         {
             var res = await repository.Delete(companyId, cropId, id);
             return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
+    });
+}
+
+void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class, IHasId, ICropComponent where CP : class, IHasId, ICropComponentProperty
+{
+    var fullRoute = $"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/{ typeof(C).Name.UnCapitalize() }s/{{componentId:int}}/{ routeName }";
+    var group = app.MapGroup(fullRoute)
+        .WithTags(routeName.Capitalize());
+
+    // GET all
+    group.MapGet("/", ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId) =>
+    {
+        try
+        {
+            var res = repository.GetAll(companyId, cropId, componentId);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
+    });
+    
+    // GET single
+    group.MapGet("/{id:int}", async ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromRoute] int id) =>
+    {
+        try
+        {
+            var res = await repository.Get(companyId, cropId, componentId, id);
+            return Results.Ok(res);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return ResourceNotFound(e);
+        }
+    });
+    
+    // POST
+    group.MapPost("/", async ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromBody] CP component) =>
+    {
+        try
+        {
+            var res = await repository.Add(companyId, cropId, componentId, component);
+            return ResourceCreated(fullRoute, res);
         }
         catch (KeyNotFoundException e)
         {

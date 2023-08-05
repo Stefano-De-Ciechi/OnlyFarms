@@ -83,3 +83,60 @@ Content-Type: application/json
   "actuatorType" : "Sprinkler",
   "tag" : "irrigatore nord"
 }
+
+### ===== Sensors =====
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/sensors
+Content-Type: application/json
+
+{
+  "sensorType" : "Temperature",
+  "tag" : "sensore di temperatura nord"
+}
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/sensors
+Content-Type: application/json
+
+{
+  "sensorType" : "Humidity",
+  "tag" : "sensore di umidita' est"
+}
+
+### ===== ActuatorCommands =====
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/actuatorCommands
+Content-Type: application/json
+
+{
+  "state" : "active"
+}
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/actuatorCommands
+Content-Type: application/json
+
+{
+  "state" : "inactive"
+}
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/actuatorCommands
+Content-Type: application/json
+
+{
+  "state" : "active"
+}
+
+### ===== Measurements =====
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/sensors/1/measurements
+Content-Type: application/json
+
+{
+  "measuringUnit" : "C°",
+  "value" : 30
+}
