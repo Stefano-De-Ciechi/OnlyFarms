@@ -1,10 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using OnlyFarms.Core.Data;
-using OnlyFarms.Core.Models;
-
 namespace OnlyFarms.RestApi.Data;
 
-// C e' il tipo del componente (Attuatore o Sensore), CP e' il tipo della proprieta' del componente (ActuatorCommand o Measurement)
+// C e' il tipo del componente (Attuatore o Sensore), CP e' il tipo della proprieta' del componente (Command o Measurement)
 public class CropComponentPropertyRepository<C, CP> : ICropComponentPropertyRepository<CP> where C : class, IHasId, ICropComponent where CP : class, IHasId, ICropComponentProperty
 {
     private readonly DataContext _context;
@@ -21,21 +17,12 @@ public class CropComponentPropertyRepository<C, CP> : ICropComponentPropertyRepo
         _components = components;
     }
     
-    /*public async IAsyncEnumerable<CP> GetAll(int farmingCompanyId, int cropId, int componentId)
+    public async IAsyncEnumerable<CP> GetAll(int farmingCompanyId, int cropId, int componentId)
     {
         var component = await _components.Get(farmingCompanyId, cropId, componentId);
-        foreach (var cp in _entities.Where(cp => cp.ComponentId == component.Id)) yield return cp;
-    }*/
-    
-    public IAsyncEnumerable<CP> GetAll(int farmingCompanyId, int cropId, int componentId)
-    {
-        _CheckResourceExistence<FarmingCompany>(farmingCompanyId);
-        _CheckResourceExistence<Crop>(cropId);
-        _CheckResourceExistence<Actuator>(componentId);
-
-        return _entities.Where(cp => cp.ComponentId == componentId).AsAsyncEnumerable();
+        foreach (var c in _entities.Where(c => c.ComponentId == component.Id)) yield return c;
     }
-
+    
     public async Task<CP> Get(int farmingCompanyId, int cropId, int componentId, int id)
     {
         var component = await _components.Get(farmingCompanyId, cropId, componentId);
@@ -43,7 +30,7 @@ public class CropComponentPropertyRepository<C, CP> : ICropComponentPropertyRepo
 
         if (res == null)
         {
-            throw new KeyNotFoundException($"no resource of type {typeof(CP).Name} with ID = {id}");
+            throw new NotFoundException<CP>(id);
         }
 
         return res;
@@ -61,12 +48,4 @@ public class CropComponentPropertyRepository<C, CP> : ICropComponentPropertyRepo
         return property;
     }
     
-    private void _CheckResourceExistence<TR>(int id) where TR : class, IHasId
-    {
-        var resource = _context.Find<TR>(id);
-        if (resource == null)
-        {
-            throw new KeyNotFoundException($"no resource of type '{ typeof(TR).Name }' with ID = { id }");
-        }
-    }
 }

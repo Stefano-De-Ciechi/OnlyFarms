@@ -11,7 +11,7 @@ public record Measurement : IHasId, ICropComponentProperty      // entita' Misur
     public required string MeasuringUnit { get; set; }
     
     /*
-     * Spiegazione: nella REST API, gli endpoint di ActuatorCommand e Measurement sono molto simili tra loro, ma uno agisce
+     * Spiegazione: nella REST API, gli endpoint di Command e Measurement sono molto simili tra loro, ma uno agisce
      * sui sensori mentre l'altro sugli attuatori; per poter scrivere un'unica repository generica e' necessario avere un modo
      * generico per accedere agli ID dei sensori o degli attuatori, che e' lo scopo della proprieta' ComponentId
      * (ho provato in molti modi con combinazioni di attributi come [ForeignKey("...")], [Column("...")] e/o [NotMapped],

@@ -11,7 +11,7 @@ using OnlyFarms.RestApi.Data;
 namespace OnlyFarms.RestApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230805131442_CropComponentPropertyReference")]
+    [Migration("20230805173012_CropComponentPropertyReference")]
     partial class CropComponentPropertyReference
     {
         /// <inheritdoc />
@@ -46,7 +46,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("Actuators");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Core.Models.ActuatorCommand", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Command", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -283,7 +283,7 @@ namespace OnlyFarms.RestApi.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Core.Models.ActuatorCommand", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Command", b =>
                 {
                     b.HasOne("OnlyFarms.Core.Models.Actuator", null)
                         .WithMany("Commands")

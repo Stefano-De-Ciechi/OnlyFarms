@@ -43,7 +43,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.ToTable("Actuators");
                 });
 
-            modelBuilder.Entity("OnlyFarms.Core.Models.ActuatorCommand", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Command", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -280,7 +280,7 @@ namespace OnlyFarms.RestApi.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OnlyFarms.Core.Models.ActuatorCommand", b =>
+            modelBuilder.Entity("OnlyFarms.Core.Models.Command", b =>
                 {
                     b.HasOne("OnlyFarms.Core.Models.Actuator", null)
                         .WithMany("Commands")

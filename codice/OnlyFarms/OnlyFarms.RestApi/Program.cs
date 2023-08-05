@@ -1,9 +1,5 @@
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OnlyFarms.Core.Data;
-using OnlyFarms.Core.Infrastructure;
-using OnlyFarms.Core.Models;
-using OnlyFarms.RestApi.Data;
 
 const string API_VERSION = "v1";
 const string API_PREFIX = $"api/{ API_VERSION }";
@@ -27,6 +23,36 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// gestore delle eccezioni "custom" per intercettare NotFoundException (lanciate dalle varie repository dei dati)
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.ContentType = "application/json";
+        
+        var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+        
+        var errorMessage = new ErrorMessage()
+        {
+            Message = "Error during the current request",
+            Resource = context.Request.Path.ToString()
+        };
+
+        if ((bool) exceptionHandlerPathFeature?.Error.GetType().IsGenericType)      // le eccezioni di tipo NotFoundException sono generiche
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            errorMessage.Message = exceptionHandlerPathFeature.Error.Message;
+        }
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            errorMessage.Message = exceptionHandlerPathFeature.Error.Message;
+        }
+
+        await context.Response.WriteAsJsonAsync(errorMessage);
+    });
+});
+
 app.UseHttpsRedirection();
 
 MapCommonRoutes<FarmingCompany>("farmingCompanies");
@@ -34,10 +60,16 @@ MapCommonRoutes<WaterCompany>("waterCompanies");
 MapCropsRoutes();
 MapCropComponentsRoutes<Actuator>("actuators");
 MapCropComponentsRoutes<Sensor>("sensors");
-MapCropComponentsPropertiesRoutes<Actuator, ActuatorCommand>("actuatorCommands");
+MapCropComponentsPropertiesRoutes<Actuator, Command>("commands");
 MapCropComponentsPropertiesRoutes<Sensor, Measurement>("measurements");
 
 app.Run();
+
+// metodo creato per semplificare la scrittura della dependency injection per repository che necessitano di altre repository gia' create
+TService GetService<TService>(IServiceProvider services) where TService : notnull
+{
+    return services.GetRequiredService<TService>();
+}
 
 void InjectRepositories(IServiceCollection services, IConfiguration configuration)
 {
@@ -55,14 +87,13 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     //services.AddScoped<IRepository<Reservation>>(_ => new DataContextRepository<Reservation>(dataContext));
     //services.AddScoped<IRepository<WaterUsage>>(_ => new DataContextRepository<WaterUsage>(dataContext));
     
-    // TODO gestire eccezioni in tutte le repository come in ICropComponentPropertyRepository
     services.AddScoped<IRepository<FarmingCompany>>(_ => new DataContextRepository<FarmingCompany>(dataContext));
     services.AddScoped<IRepository<WaterCompany>>(_ => new DataContextRepository<WaterCompany>(dataContext));
-    services.AddScoped<ICropRepository>(_ => new CropRepository(dataContext));
-    services.AddScoped<ICropComponentRepository<Actuator>>(_ => new CropComponentRepository<Actuator>(dataContext));
-    services.AddScoped<ICropComponentRepository<Sensor>>(_ => new CropComponentRepository<Sensor>(dataContext));
-    services.AddScoped<ICropComponentPropertyRepository<ActuatorCommand>>(serviceProvider => new CropComponentPropertyRepository<Actuator, ActuatorCommand>(dataContext, serviceProvider.GetRequiredService<ICropComponentRepository<Actuator>>()));
-    services.AddScoped<ICropComponentPropertyRepository<Measurement>>(serviceProvider => new CropComponentPropertyRepository<Sensor, Measurement>(dataContext, serviceProvider.GetRequiredService<ICropComponentRepository<Sensor>>()));
+    services.AddScoped<ICropRepository>(serviceProvider => new CropRepository(dataContext, GetService<IRepository<FarmingCompany>>(serviceProvider)));
+    services.AddScoped<ICropComponentRepository<Actuator>>(serviceProvider => new CropComponentRepository<Actuator>(dataContext, GetService<ICropRepository>(serviceProvider)));
+    services.AddScoped<ICropComponentRepository<Sensor>>(serviceProvider => new CropComponentRepository<Sensor>(dataContext, GetService<ICropRepository>(serviceProvider)));
+    services.AddScoped<ICropComponentPropertyRepository<Command>>(serviceProvider => new CropComponentPropertyRepository<Actuator, Command>(dataContext, GetService<ICropComponentRepository<Actuator>>(serviceProvider)));
+    services.AddScoped<ICropComponentPropertyRepository<Measurement>>(serviceProvider => new CropComponentPropertyRepository<Sensor, Measurement>(dataContext, GetService<ICropComponentRepository<Sensor>>(serviceProvider)));
 }
 
 // TODO aggiungere i metodi di documentazione swagger a tutti gli endpoint
@@ -80,57 +111,29 @@ void MapCommonRoutes<T>(string routeName) where T : class, IHasId
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] IRepository<T> repository, int id) =>
     {
-        try
-        {
-            var res = await repository.Get(id);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Get(id);
+        return Results.Ok(res);
     });
 
     // POST
     group.MapPost("/", async ([FromServices] IRepository<T> repository, [FromBody] T newResource) =>
     {
-        try
-        {
-            var res = await repository.Add(newResource);
-            return ResourceCreated(fullRoute, res); // Results.Created imposta nell'Header della Response anche la locazione della nuova risorsa
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Add(newResource);
+        return ResourceCreated(fullRoute, res); // Results.Created imposta nell'Header della Response anche la locazione della nuova risorsa
     });
 
     // PUT
     group.MapPut("/{id:int}", async ([FromServices] IRepository<T> repository, [FromRoute] int id, [FromBody] T updatedResource) =>
     {
-        try
-        {
-            var res = await repository.Update(id, updatedResource);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Update(id, updatedResource);
+        return Results.Ok(res);
     });
 
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] IRepository<T> repository, [FromRoute] int id) =>
     {
-        try
-        {
-            var res = await repository.Delete(id);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Delete(id);
+        return Results.Ok(res);
     });
 }
 
@@ -143,71 +146,36 @@ void MapCropsRoutes()
     // GET all
     group.MapGet("/", ([FromServices] ICropRepository repository, [FromRoute] int companyId) =>
     {
-        try
-        {
-            var res = repository.GetAll(companyId);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = repository.GetAll(companyId);
+        return Results.Ok(res);
     });
 
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
     {
-        try
-        {
-            var crop = await repository.Get(companyId, id);
-            return Results.Ok(crop);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var crop = await repository.Get(companyId, id);
+        return Results.Ok(crop);
     });
     
     // POST
     group.MapPost("/", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromBody] Crop crop) =>
     {
-        try
-        {
-            var res = await repository.Add(companyId, crop); // TODO gestire eccezione
-            return ResourceCreated(fullRoute, res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Add(companyId, crop);
+        return ResourceCreated(fullRoute, res);
     });
     
     // PUT
     group.MapPut("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id, [FromBody] Crop updatedCrop) =>
     {
-        try
-        {
-            var res = await repository.Update(companyId, id, updatedCrop);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Update(companyId, id, updatedCrop);
+        return Results.Ok(res);
     });
     
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
     {
-        try
-        {
-            var res = await repository.Delete(companyId, id);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Delete(companyId, id);
+        return Results.Ok(res);
     });
 }
 
@@ -220,58 +188,29 @@ void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponen
     // GET all
     group.MapGet("/", ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId) =>
     {
-        try
-        {
-            var res = repository.GetAll(companyId, cropId);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
-        
+        var res = repository.GetAll(companyId, cropId);
+        return Results.Ok(res);
     });
     
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
     {
-        try
-        {
-            var res = await repository.Get(companyId, cropId, id);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Get(companyId, cropId, id);
+        return Results.Ok(res);
     });
     
     // POST
     group.MapPost("/", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromBody] T component) =>
     {
-        try
-        {
-            var res = await repository.Add(companyId, cropId, component); // TODO gestire eccezione
-            return ResourceCreated(fullRoute, res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Add(companyId, cropId, component);
+        return ResourceCreated(fullRoute, res);
     });
     
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
     {
-        try
-        {
-            var res = await repository.Delete(companyId, cropId, id);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Delete(companyId, cropId, id);
+        return Results.Ok(res);
     });
 }
 
@@ -284,45 +223,23 @@ void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class,
     // GET all
     group.MapGet("/", ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId) =>
     {
-        try
-        {
-            var res = repository.GetAll(companyId, cropId, componentId);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = repository.GetAll(companyId, cropId, componentId);
+        return Results.Ok(res);
     });
     
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromRoute] int id) =>
     {
-        try
-        {
-            var res = await repository.Get(companyId, cropId, componentId, id);
-            return Results.Ok(res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Get(companyId, cropId, componentId, id);
+        return Results.Ok(res);
     });
     
     // POST
     group.MapPost("/", async ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromBody] CP component) =>
     {
-        try
-        {
-            var res = await repository.Add(companyId, cropId, componentId, component);
-            return ResourceCreated(fullRoute, res);
-        }
-        catch (KeyNotFoundException e)
-        {
-            return ResourceNotFound(e);
-        }
+        var res = await repository.Add(companyId, cropId, componentId, component);
+        return ResourceCreated(fullRoute, res);
     });
 }
 
 IResult ResourceCreated<T>(string route, T resource) where T : IHasId => Results.Created($"{ route }/{ resource.Id }", resource);
-IResult ResourceNotFound(KeyNotFoundException e) => Results.NotFound(e.Message);     // TODO rinominare

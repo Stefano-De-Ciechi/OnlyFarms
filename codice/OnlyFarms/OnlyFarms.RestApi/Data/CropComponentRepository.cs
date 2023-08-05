@@ -1,51 +1,45 @@
-using Microsoft.EntityFrameworkCore;
-using OnlyFarms.Core.Data;
-using OnlyFarms.Core.Models;
-
 namespace OnlyFarms.RestApi.Data;
 
 public class CropComponentRepository<T> : ICropComponentRepository<T> where T : class, ICropComponent
 {
     private readonly DataContext _context;
     private readonly DbSet<T> _entities;
+    private readonly ICropRepository _crops;
 
-    public CropComponentRepository(DataContext context)
+    public CropComponentRepository(DataContext context, ICropRepository crops)
     {
         ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(crops);
         
         _context = context;
         _entities = _context.Set<T>();
+        _crops = crops;
     }
 
-    public IAsyncEnumerable<T> GetAll(int farmingCompanyId, int cropId)
+    public async IAsyncEnumerable<T> GetAll(int farmingCompanyId, int cropId)
     {
-        _CheckResourceExistence<FarmingCompany>(farmingCompanyId);
-        _CheckResourceExistence<Crop>(cropId);
-        
-        return _entities.Where(c => c.CropId == cropId && c.FarmingCompanyId == farmingCompanyId).AsAsyncEnumerable();
+        var crop = await _crops.Get(farmingCompanyId, cropId);
+        foreach (var c in _entities.Where(c => c.CropId == crop.Id && c.FarmingCompanyId == crop.FarmingCompanyId)) yield return c;
     }
     
     public async Task<T> Get(int farmingCompanyId, int cropId, int componentId)
     {
-        _CheckResourceExistence<FarmingCompany>(farmingCompanyId);
-        _CheckResourceExistence<Crop>(cropId);
-
-        var res = await _entities.FirstOrDefaultAsync(c => c.Id == componentId && c.CropId == cropId && c.FarmingCompanyId == farmingCompanyId);
+        var crop = await _crops.Get(farmingCompanyId, cropId);
+        var res = await _entities.FirstOrDefaultAsync(c => c.Id == componentId && c.CropId == crop.Id && c.FarmingCompanyId == crop.FarmingCompanyId);
 
         if (res == null)
         {
-            throw new KeyNotFoundException($"no resource of type '{ typeof(T).Name }' with ID = { cropId }");
+            throw new NotFoundException<T>(componentId);
         }
 
         return res;
     }
     public async Task<T> Add(int farmingCompanyId, int cropId, T component)
     {
-        _CheckResourceExistence<FarmingCompany>(farmingCompanyId);
-        _CheckResourceExistence<Crop>(cropId);
+        var crop = await _crops.Get(farmingCompanyId, cropId);
         
-        component.FarmingCompanyId = farmingCompanyId;
-        component.CropId = cropId;
+        component.FarmingCompanyId = crop.FarmingCompanyId;
+        component.CropId = crop.Id;
 
         await _entities.AddAsync(component);
         await _context.SaveChangesAsync();
@@ -61,14 +55,5 @@ public class CropComponentRepository<T> : ICropComponentRepository<T> where T : 
         await _context.SaveChangesAsync();
 
         return component;
-    }
-
-    private void _CheckResourceExistence<TR>(int id) where TR : class, IHasId
-    {
-        var resource = _context.Find<TR>(id);
-        if (resource == null)
-        {
-            throw new KeyNotFoundException($"no resource of type '{ typeof(TR).Name }' with ID = { id }");
-        }
     }
 }

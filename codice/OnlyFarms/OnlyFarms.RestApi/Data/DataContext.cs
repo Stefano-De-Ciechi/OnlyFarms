@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using OnlyFarms.Core.Models;
-
-namespace OnlyFarms.RestApi.Data;
+﻿namespace OnlyFarms.RestApi.Data;
 
 // TODO quando si implementa l'autenticazione, questa classe deve estendere IdentityDbContext !!!
 
@@ -21,7 +18,7 @@ public class DataContext : DbContext
     // TODO FarmingCompanies e WaterCompanies possono essere trasformate in un unica tabella; impostare dei vincoli sul tipo di azienda all'interno delle prenotazioni, dei consumi e delle coltivazioni
 
     public DbSet<Actuator> Actuators => Set<Actuator>();
-    public DbSet<ActuatorCommand> ActuatorsCommands => Set<ActuatorCommand>();
+    public DbSet<Command> ActuatorsCommands => Set<Command>();
     public DbSet<Crop> Crops => Set<Crop>();
     public DbSet<FarmingCompany> FarmingCompanies => Set<FarmingCompany>();
     public DbSet<Reservation> Reservations => Set<Reservation>();

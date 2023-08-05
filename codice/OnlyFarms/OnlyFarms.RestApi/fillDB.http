@@ -13,6 +13,12 @@ Content-Type: application/json
   "address" : "Via Vicinale Spadari 13"
 }
 
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
 ### ===== Water Companies =====
 
 ###
@@ -26,6 +32,12 @@ Content-Type: application/json
   "waterSupply" : 10000
 }
 
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
 ###
 POST https://localhost:7058/api/v1/waterCompanies
 Content-Type: application/json
@@ -36,6 +48,12 @@ Content-Type: application/json
 "address" : "Via del Vecchio Politecnico 8",
 "waterSupply" : 12000
 }
+
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
 
 ###
 POST https://localhost:7058/api/v1/waterCompanies
@@ -48,6 +66,12 @@ Content-Type: application/json
   "waterSupply" : 15000
 }
 
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
 ###
 POST https://localhost:7058/api/v1/waterCompanies
 Content-Type: application/json
@@ -58,6 +82,12 @@ Content-Type: application/json
 "address" : "Via SS. Giacomo e Filippo 7",
 "waterSupply" : 10000
 }
+
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
 
 ### ===== Crops =====
 
@@ -73,6 +103,12 @@ Content-Type: application/json
   "idealHumidity" : 65
 }
 
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
 ### ===== Actuators =====
 
 ###
@@ -83,6 +119,12 @@ Content-Type: application/json
   "actuatorType" : "Sprinkler",
   "tag" : "irrigatore nord"
 }
+
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
 
 ### ===== Sensors =====
 
@@ -95,6 +137,12 @@ Content-Type: application/json
   "tag" : "sensore di temperatura nord"
 }
 
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
 ###
 POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/sensors
 Content-Type: application/json
@@ -104,31 +152,55 @@ Content-Type: application/json
   "tag" : "sensore di umidita' est"
 }
 
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
 ### ===== ActuatorCommands =====
 
 ###
-POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/actuatorCommands
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/commands
 Content-Type: application/json
 
 {
   "state" : "active"
 }
 
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
 ###
-POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/actuatorCommands
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/commands
 Content-Type: application/json
 
 {
   "state" : "inactive"
 }
 
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
 ###
-POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/actuatorCommands
+POST https://localhost:7058/api/v1/farmingCompanies/1/crops/1/actuators/1/commands
 Content-Type: application/json
 
 {
   "state" : "active"
 }
+
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
 
 ### ===== Measurements =====
 
@@ -140,3 +212,9 @@ Content-Type: application/json
   "measuringUnit" : "C°",
   "value" : 30
 }
+
+> {% 
+ client.test("Resource Successfully Created", function() {
+     client.assert(response.status === 201);
+ })
+ %}

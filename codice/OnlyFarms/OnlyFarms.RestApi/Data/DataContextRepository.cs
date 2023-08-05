@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using OnlyFarms.Core.Data;
-
-namespace OnlyFarms.RestApi.Data;
+﻿namespace OnlyFarms.RestApi.Data;
 
 public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
 {
@@ -23,7 +20,7 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         var res = await _entities.FindAsync(id);
         if (res == null)
         {
-            throw new KeyNotFoundException($"no resource of type '{ typeof(T).Name }' with ID = { id }");
+            throw new NotFoundException<T>(id);
         }
 
         return res;

@@ -15,5 +15,5 @@ public record Actuator : ICropComponent      // entita' Attuatore
     public int CropId { get; set; }     // riferimento alla coltivazione di appartenenza
 
     // riferimento a tutti i comandi ricevuti dall'attuatore
-    public ICollection<ActuatorCommand> Commands { get; init; } = new List<ActuatorCommand>();
+    public ICollection<Command> Commands { get; init; } = new List<Command>();
 }

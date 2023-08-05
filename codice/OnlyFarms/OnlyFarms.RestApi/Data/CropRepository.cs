@@ -1,36 +1,35 @@
-using Microsoft.EntityFrameworkCore;
-using OnlyFarms.Core.Data;
-using OnlyFarms.Core.Models;
-
 namespace OnlyFarms.RestApi.Data;
 
 // TODO la classe potrebbe essere resa generica per funzionare con tutte le entita' che richiedono un farmingCompanyId (ma devono anche implementare tutti i verbi HTTP)
 public class CropRepository : ICropRepository
 {
     private readonly DataContext _context;
+    private readonly DbSet<Crop> _crops;
+    private readonly IRepository<FarmingCompany> _companies;
 
-    public CropRepository(DataContext context)
+    public CropRepository(DataContext context, IRepository<FarmingCompany> companies)
     {
         ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(companies);
 
         _context = context;
+        _crops = _context.Set<Crop>();
+        _companies = companies;
     }
 
-    public IAsyncEnumerable<Crop> GetAll(int farmingCompanyId)
+    public async IAsyncEnumerable<Crop> GetAll(int farmingCompanyId)
     {
-        _CheckResourceExistence<FarmingCompany>(farmingCompanyId);
-        
-        return _context.Crops.Where(c => c.FarmingCompanyId == farmingCompanyId).AsAsyncEnumerable();
+        var company = await _companies.Get(farmingCompanyId);
+        foreach (var c in _crops.Where(c => c.FarmingCompanyId == company.Id)) yield return c;
     }
 
     public async Task<Crop> Get(int farmingCompanyId, int cropId)
     {
-        _CheckResourceExistence<FarmingCompany>(farmingCompanyId);
-        
-        var res = await _context.Crops.FirstOrDefaultAsync(c => c.Id == cropId && c.FarmingCompanyId == farmingCompanyId);
+        var company = await _companies.Get(farmingCompanyId);
+        var res = await _crops.FirstOrDefaultAsync(c => c.Id == cropId && c.FarmingCompanyId == company.Id);
         if (res == null)
         {
-            throw new KeyNotFoundException($"no resource of type '{ nameof(Crop) }' with ID = { cropId }");
+            throw new NotFoundException<Crop>(cropId);
         }
 
         return res;
@@ -38,16 +37,12 @@ public class CropRepository : ICropRepository
     
     public async Task<Crop> Add(int farmingCompanyId, Crop crop)
     {
-        var company = await _context.FarmingCompanies.FirstOrDefaultAsync(f => f.Id == farmingCompanyId);
-        if (company == null)
-        {
-            throw new KeyNotFoundException($"no resource of type '{ nameof(FarmingCompany) }' with ID = { farmingCompanyId }");       // TODO pensare ad un meccanismo di gestione delle eccezioni se si passa un id di una azienda agricola non esistente
-        }
+        var company = await _companies.Get(farmingCompanyId);
 
-        crop.FarmingCompanyId = farmingCompanyId;
+        crop.FarmingCompanyId = company.Id;
         company.WaterSupply += crop.WaterNeeds;     // TODO rimuovere se questo non e' il comportamento voluto
 
-        await _context.Crops.AddAsync(crop);
+        await _crops.AddAsync(crop);
         await _context.SaveChangesAsync();
 
         return crop;
@@ -58,7 +53,7 @@ public class CropRepository : ICropRepository
         var crop = await Get(farmingCompanyId, cropId);
         if (crop == null)
         {
-            throw new KeyNotFoundException($"no resource of type '{ nameof(Crop) }' with ID = { cropId }");
+            throw new NotFoundException<Crop>(cropId);
         }
 
         cropUpdate.Id = crop.Id;
@@ -69,12 +64,12 @@ public class CropRepository : ICropRepository
         */
         if (!crop.WaterNeeds.Equals(cropUpdate.WaterNeeds))
         {
-            var company = await _context.FarmingCompanies.FindAsync(farmingCompanyId);
-            company!.WaterSupply -= crop.WaterNeeds;    // TODO rimuovere se questo non e' il comportamento voluto
-            company!.WaterSupply += cropUpdate.WaterNeeds;
+            var company = await _companies.Get(farmingCompanyId);
+            company.WaterSupply -= crop.WaterNeeds;    // TODO rimuovere se questo non e' il comportamento voluto
+            company.WaterSupply += cropUpdate.WaterNeeds;
         }
         
-        _context.Crops.Entry(crop).CurrentValues.SetValues(cropUpdate);
+        _crops.Entry(crop).CurrentValues.SetValues(cropUpdate);
         await _context.SaveChangesAsync();
 
         return cropUpdate;
@@ -85,25 +80,16 @@ public class CropRepository : ICropRepository
         var crop = await Get(farmingCompanyId, cropId);
         if (crop == null)
         {
-            throw new KeyNotFoundException($"no resource of type '{ nameof(Crop) }' with ID = { cropId }");
+            throw new NotFoundException<Crop>(cropId);
         }
 
-        _context.Remove(crop);      // TODO verificare che vengano eliminati dal DB anche tutte le entita' legate alla coltivazione (es. sensori, attuatori, ...)
+        _crops.Remove(crop);      // TODO verificare che vengano eliminati dal DB anche tutte le entita' legate alla coltivazione (es. sensori, attuatori, ...)
         
-        var company = await _context.FarmingCompanies.FindAsync(farmingCompanyId);
-        company!.WaterSupply -= crop.WaterNeeds;    // TODO rimuovere se questo non e' il comportamento voluto
+        var company = await _companies.Get(farmingCompanyId);
+        company.WaterSupply -= crop.WaterNeeds;    // TODO rimuovere se questo non e' il comportamento voluto
         
         await _context.SaveChangesAsync();
 
         return crop;
-    }
-    
-    private void _CheckResourceExistence<TR>(int id) where TR : class, IHasId
-    {
-        var resource = _context.Find<TR>(id);
-        if (resource == null)
-        {
-            throw new KeyNotFoundException($"no resource of type '{ typeof(TR).Name }' with ID = { id }");
-        }
     }
 }
