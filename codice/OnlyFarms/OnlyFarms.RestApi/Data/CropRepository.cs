@@ -83,7 +83,7 @@ public class CropRepository : ICropRepository
             throw new NotFoundException<Crop>(cropId);
         }
 
-        _crops.Remove(crop);      // TODO verificare che vengano eliminati dal DB anche tutte le entita' legate alla coltivazione (es. sensori, attuatori, ...)
+        _crops.Remove(crop);
         
         var company = await _companies.Get(farmingCompanyId);
         company.WaterSupply -= crop.WaterNeeds;    // TODO rimuovere se questo non e' il comportamento voluto

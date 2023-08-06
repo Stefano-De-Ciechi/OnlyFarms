@@ -218,3 +218,36 @@ Content-Type: application/json
      client.assert(response.status === 201);
  })
  %}
+
+### ===== WaterUsages =====
+
+###
+POST https://localhost:7058/api/v1/reservations?farmingCompanyId=1&waterCompanyId=1
+Content-Type: application/json
+
+{
+  "bookedQuantity" : 1000,
+  "price" : 300
+}
+
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}
+
+### ===== Reservations =====
+
+###
+POST https://localhost:7058/api/v1/farmingCompanies/1/waterUsages
+Content-Type: application/json
+
+{
+  "consumedQuantity" : 300
+}
+
+> {%
+    client.test("Resource Successfully Created", function() {
+        client.assert(response.status === 201);
+    })
+%}

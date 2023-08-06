@@ -23,7 +23,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// gestore delle eccezioni "custom" per intercettare NotFoundException (lanciate dalle varie repository dei dati)
+// gestore delle eccezioni "custom" per intercettare NotFoundException (lanciate dalle varie repository dei dati) e restituire le eccezioni in formato JSON
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
@@ -62,6 +62,8 @@ MapCropComponentsRoutes<Actuator>("actuators");
 MapCropComponentsRoutes<Sensor>("sensors");
 MapCropComponentsPropertiesRoutes<Actuator, Command>("commands");
 MapCropComponentsPropertiesRoutes<Sensor, Measurement>("measurements");
+MapWaterUsageRoutes();
+MapReservationsRoutes();
 
 app.Run();
 
@@ -85,8 +87,7 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     services.AddScoped<DataContext>(_ => dataContext);
     
     //services.AddScoped<IRepository<Reservation>>(_ => new DataContextRepository<Reservation>(dataContext));
-    //services.AddScoped<IRepository<WaterUsage>>(_ => new DataContextRepository<WaterUsage>(dataContext));
-    
+
     services.AddScoped<IRepository<FarmingCompany>>(_ => new DataContextRepository<FarmingCompany>(dataContext));
     services.AddScoped<IRepository<WaterCompany>>(_ => new DataContextRepository<WaterCompany>(dataContext));
     services.AddScoped<ICropRepository>(serviceProvider => new CropRepository(dataContext, GetService<IRepository<FarmingCompany>>(serviceProvider)));
@@ -94,10 +95,12 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     services.AddScoped<ICropComponentRepository<Sensor>>(serviceProvider => new CropComponentRepository<Sensor>(dataContext, GetService<ICropRepository>(serviceProvider)));
     services.AddScoped<ICropComponentPropertyRepository<Command>>(serviceProvider => new CropComponentPropertyRepository<Actuator, Command>(dataContext, GetService<ICropComponentRepository<Actuator>>(serviceProvider)));
     services.AddScoped<ICropComponentPropertyRepository<Measurement>>(serviceProvider => new CropComponentPropertyRepository<Sensor, Measurement>(dataContext, GetService<ICropComponentRepository<Sensor>>(serviceProvider)));
+    services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(dataContext, GetService<IRepository<FarmingCompany>>(serviceProvider)));
+    services.AddScoped<IReservationRepository>(serviceProvider => new ReservationRepository(dataContext, GetService<IRepository<FarmingCompany>>(serviceProvider), GetService<IRepository<WaterCompany>>(serviceProvider)));
 }
 
 // TODO aggiungere i metodi di documentazione swagger a tutti gli endpoint
-// TODO ripensare a tutte le chiavi composte, vedi https://learn.microsoft.com/en-us/ef/core/modeling/keys?tabs=data-annotations e rigenerare una migrazione del DB
+// TODO aggiungere query ad alcuni endpoint (es. per citta' alle aziende, per intervallo di tempo alle misurazioni ecc.)
 
 void MapCommonRoutes<T>(string routeName) where T : class, IHasId
 {
@@ -106,35 +109,43 @@ void MapCommonRoutes<T>(string routeName) where T : class, IHasId
         .WithTags(routeName.Capitalize());
     
     // GET all
-    group.MapGet("/", ([FromServices] IRepository<T> repository) => repository.GetAll());
+    group.MapGet("/", ([FromServices] IRepository<T> repository) => repository.GetAll())
+        .Produces<IAsyncEnumerable<T>>();
 
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] IRepository<T> repository, int id) =>
     {
         var res = await repository.Get(id);
         return Results.Ok(res);
-    });
+    })
+        .Produces<T>()
+        .Produces<ErrorMessage>(404);
 
     // POST
     group.MapPost("/", async ([FromServices] IRepository<T> repository, [FromBody] T newResource) =>
     {
         var res = await repository.Add(newResource);
         return ResourceCreated(fullRoute, res); // Results.Created imposta nell'Header della Response anche la locazione della nuova risorsa
-    });
+    })
+        .Produces<T>(201);
 
     // PUT
     group.MapPut("/{id:int}", async ([FromServices] IRepository<T> repository, [FromRoute] int id, [FromBody] T updatedResource) =>
     {
         var res = await repository.Update(id, updatedResource);
         return Results.Ok(res);
-    });
+    })
+        .Produces<T>()
+        .Produces<ErrorMessage>(404);
 
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] IRepository<T> repository, [FromRoute] int id) =>
     {
         var res = await repository.Delete(id);
         return Results.Ok(res);
-    });
+    })
+        .Produces<T>()
+        .Produces<ErrorMessage>(404);
 }
 
 void MapCropsRoutes()
@@ -148,35 +159,45 @@ void MapCropsRoutes()
     {
         var res = repository.GetAll(companyId);
         return Results.Ok(res);
-    });
+    })
+        .Produces<IAsyncEnumerable<Crop>>()
+        .Produces<ErrorMessage>(404);
 
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
     {
         var crop = await repository.Get(companyId, id);
         return Results.Ok(crop);
-    });
+    })
+        .Produces<Crop>()
+        .Produces<ErrorMessage>(404);
     
     // POST
     group.MapPost("/", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromBody] Crop crop) =>
     {
         var res = await repository.Add(companyId, crop);
         return ResourceCreated(fullRoute, res);
-    });
+    })
+        .Produces<Crop>(201)
+        .Produces<ErrorMessage>(404);
     
     // PUT
     group.MapPut("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id, [FromBody] Crop updatedCrop) =>
     {
         var res = await repository.Update(companyId, id, updatedCrop);
         return Results.Ok(res);
-    });
+    })
+        .Produces<Crop>()
+        .Produces<ErrorMessage>(404);
     
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] ICropRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
     {
         var res = await repository.Delete(companyId, id);
         return Results.Ok(res);
-    });
+    })
+        .Produces<Crop>()
+        .Produces<ErrorMessage>(404);
 }
 
 void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponent
@@ -190,28 +211,36 @@ void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponen
     {
         var res = repository.GetAll(companyId, cropId);
         return Results.Ok(res);
-    });
+    })
+        .Produces<IAsyncEnumerable<T>>()
+        .Produces<ErrorMessage>(404);
     
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
     {
         var res = await repository.Get(companyId, cropId, id);
         return Results.Ok(res);
-    });
+    })
+        .Produces<T>()
+        .Produces<ErrorMessage>(404);
     
     // POST
     group.MapPost("/", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromBody] T component) =>
     {
         var res = await repository.Add(companyId, cropId, component);
         return ResourceCreated(fullRoute, res);
-    });
+    })
+        .Produces<T>(201)
+        .Produces<ErrorMessage>(404);
     
     // DELETE
     group.MapDelete("/{id:int}", async ([FromServices] ICropComponentRepository<T> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int id) =>
     {
         var res = await repository.Delete(companyId, cropId, id);
         return Results.Ok(res);
-    });
+    })
+        .Produces<T>()
+        .Produces<ErrorMessage>(404);
 }
 
 void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class, IHasId, ICropComponent where CP : class, IHasId, ICropComponentProperty
@@ -225,21 +254,104 @@ void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class,
     {
         var res = repository.GetAll(companyId, cropId, componentId);
         return Results.Ok(res);
-    });
+    })
+        .Produces<IAsyncEnumerable<CP>>()
+        .Produces<ErrorMessage>(404);
     
     // GET single
     group.MapGet("/{id:int}", async ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromRoute] int id) =>
     {
         var res = await repository.Get(companyId, cropId, componentId, id);
         return Results.Ok(res);
-    });
+    })
+        .Produces<CP>()
+        .Produces<ErrorMessage>(404);
     
     // POST
     group.MapPost("/", async ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromBody] CP component) =>
     {
         var res = await repository.Add(companyId, cropId, componentId, component);
         return ResourceCreated(fullRoute, res);
-    });
+    })
+        .Produces<CP>(201)
+        .Produces<ErrorMessage>(404);
+}
+
+void MapWaterUsageRoutes()
+{
+    const string fullRoute = $"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/waterUsages";
+    var group = app.MapGroup(fullRoute)
+        .WithTags("WaterUsages");
+    
+    // GET all
+    group.MapGet("/", ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId) =>
+    {
+        var res = repository.GetAll(companyId);
+        return Results.Ok(res);
+    })
+        .Produces<IAsyncEnumerable<WaterUsage>>()
+        .Produces<ErrorMessage>(404);
+
+    // GET single
+    group.MapGet("/{id:int}", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
+    {
+        var crop = await repository.Get(companyId, id);
+        return Results.Ok(crop);
+    })
+        .Produces<WaterUsage>()
+        .Produces<ErrorMessage>(404);
+    
+    // POST
+    group.MapPost("/", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromBody] WaterUsage usage) =>
+    {
+        var res = await repository.Add(companyId, usage);
+        return ResourceCreated(fullRoute, res);
+    })
+        .Produces<WaterUsage>(201)
+        .Produces<ErrorMessage>(404);
+}
+
+void MapReservationsRoutes()
+{
+    const string fullRoute = $"{ API_PREFIX }/reservations";
+    var group = app.MapGroup(fullRoute)
+        .WithTags("Reservations");
+    
+    // GET all
+    group.MapGet("/", ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId) =>
+    {
+        var res =  repository.GetAll(farmingCompanyId, waterCompanyId);
+        return Results.Ok(res);
+    })
+        .Produces<IAsyncEnumerable<Reservation>>()
+        .Produces<ErrorMessage>(404);
+    
+    // GET single
+    group.MapGet("/{id:int}", async ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromRoute] int id) =>
+    {
+        var res = await repository.Get(farmingCompanyId, waterCompanyId, id);
+        return Results.Ok(res);
+    })
+        .Produces<Reservation>()
+        .Produces<ErrorMessage>(404);
+    
+    // POST
+    group.MapPost("/", async ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromBody] Reservation reservation) =>
+    {
+        var res = await repository.Add(farmingCompanyId, waterCompanyId, reservation);
+        return ResourceCreated(fullRoute, res);
+    })
+        .Produces<Reservation>(201)
+        .Produces<ErrorMessage>(404);
+    
+    // POST
+    group.MapPut("/{id:int}", async ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromRoute] int id, [FromBody] Reservation reservation) =>
+        {
+            var res = await repository.Update(farmingCompanyId, waterCompanyId, id, reservation);
+            return Results.Ok(res);
+        })
+        .Produces<Reservation>()
+        .Produces<ErrorMessage>(404);
 }
 
 IResult ResourceCreated<T>(string route, T resource) where T : IHasId => Results.Created($"{ route }/{ resource.Id }", resource);
