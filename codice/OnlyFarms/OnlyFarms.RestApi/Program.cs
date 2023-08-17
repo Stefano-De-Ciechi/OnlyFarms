@@ -55,8 +55,8 @@ app.UseExceptionHandler(errorApp =>
 
 app.UseHttpsRedirection();
 
-MapCommonRoutes<FarmingCompany>("farmingCompanies");
-MapCommonRoutes<WaterCompany>("waterCompanies");
+MapCompanyRoutes<FarmingCompany>("farmingCompanies");
+MapCompanyRoutes<WaterCompany>("waterCompanies");
 MapCropsRoutes();
 MapCropComponentsRoutes<Actuator>("actuators");
 MapCropComponentsRoutes<Sensor>("sensors");
@@ -66,6 +66,8 @@ MapWaterUsageRoutes();
 MapReservationsRoutes();
 
 app.Run();
+
+return;     // fine del programma che "serve" la REST API
 
 // metodo creato per semplificare la scrittura della dependency injection per repository che necessitano di altre repository gia' create
 TService GetService<TService>(IServiceProvider services) where TService : notnull
@@ -86,34 +88,42 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
 
     services.AddScoped<DataContext>(_ => dataContext);
     
-    //services.AddScoped<IRepository<Reservation>>(_ => new DataContextRepository<Reservation>(dataContext));
+    //services.AddScoped<ICompanyRepository<Reservation>>(_ => new CompanyRepository<Reservation>(dataContext));
 
-    services.AddScoped<IRepository<FarmingCompany>>(_ => new DataContextRepository<FarmingCompany>(dataContext));
-    services.AddScoped<IRepository<WaterCompany>>(_ => new DataContextRepository<WaterCompany>(dataContext));
-    services.AddScoped<ICropRepository>(serviceProvider => new CropRepository(dataContext, GetService<IRepository<FarmingCompany>>(serviceProvider)));
+    services.AddScoped<ICompanyRepository<FarmingCompany>>(_ => new CompanyRepository<FarmingCompany>(dataContext));
+    services.AddScoped<ICompanyRepository<WaterCompany>>(_ => new CompanyRepository<WaterCompany>(dataContext));
+    services.AddScoped<ICropRepository>(serviceProvider => new CropRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider)));
     services.AddScoped<ICropComponentRepository<Actuator>>(serviceProvider => new CropComponentRepository<Actuator>(dataContext, GetService<ICropRepository>(serviceProvider)));
     services.AddScoped<ICropComponentRepository<Sensor>>(serviceProvider => new CropComponentRepository<Sensor>(dataContext, GetService<ICropRepository>(serviceProvider)));
     services.AddScoped<ICropComponentPropertyRepository<Command>>(serviceProvider => new CropComponentPropertyRepository<Actuator, Command>(dataContext, GetService<ICropComponentRepository<Actuator>>(serviceProvider)));
     services.AddScoped<ICropComponentPropertyRepository<Measurement>>(serviceProvider => new CropComponentPropertyRepository<Sensor, Measurement>(dataContext, GetService<ICropComponentRepository<Sensor>>(serviceProvider)));
-    services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(dataContext, GetService<IRepository<FarmingCompany>>(serviceProvider)));
-    services.AddScoped<IReservationRepository>(serviceProvider => new ReservationRepository(dataContext, GetService<IRepository<FarmingCompany>>(serviceProvider), GetService<IRepository<WaterCompany>>(serviceProvider)));
+    services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider)));
+    services.AddScoped<IReservationRepository>(serviceProvider => new ReservationRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
 }
 
 // TODO aggiungere i metodi di documentazione swagger a tutti gli endpoint
 // TODO aggiungere query ad alcuni endpoint (es. per citta' alle aziende, per intervallo di tempo alle misurazioni ecc.)
 
-void MapCommonRoutes<T>(string routeName) where T : class, IHasId
+void MapCompanyRoutes<T>(string routeName) where T : class, ICompany
 {
     var fullRoute = $"{API_PREFIX}/{ routeName }";
     var group = app.MapGroup(fullRoute)
         .WithTags(routeName.Capitalize());
     
     // GET all
-    group.MapGet("/", ([FromServices] IRepository<T> repository) => repository.GetAll())
+    group.MapGet("/", ([FromServices] ICompanyRepository<T> repository, [FromQuery] string? city) =>
+        {
+            if (city == null)
+            {
+                return repository.GetAll();
+            }
+
+            return repository.GetAll(city);
+        })
         .Produces<IAsyncEnumerable<T>>();
 
     // GET single
-    group.MapGet("/{id:int}", async ([FromServices] IRepository<T> repository, int id) =>
+    group.MapGet("/{id:int}", async ([FromServices] ICompanyRepository<T> repository, int id) =>
     {
         var res = await repository.Get(id);
         return Results.Ok(res);
@@ -122,7 +132,7 @@ void MapCommonRoutes<T>(string routeName) where T : class, IHasId
         .Produces<ErrorMessage>(404);
 
     // POST
-    group.MapPost("/", async ([FromServices] IRepository<T> repository, [FromBody] T newResource) =>
+    group.MapPost("/", async ([FromServices] ICompanyRepository<T> repository, [FromBody] T newResource) =>
     {
         var res = await repository.Add(newResource);
         return ResourceCreated(fullRoute, res); // Results.Created imposta nell'Header della Response anche la locazione della nuova risorsa
@@ -130,7 +140,7 @@ void MapCommonRoutes<T>(string routeName) where T : class, IHasId
         .Produces<T>(201);
 
     // PUT
-    group.MapPut("/{id:int}", async ([FromServices] IRepository<T> repository, [FromRoute] int id, [FromBody] T updatedResource) =>
+    group.MapPut("/{id:int}", async ([FromServices] ICompanyRepository<T> repository, [FromRoute] int id, [FromBody] T updatedResource) =>
     {
         var res = await repository.Update(id, updatedResource);
         return Results.Ok(res);
@@ -139,7 +149,7 @@ void MapCommonRoutes<T>(string routeName) where T : class, IHasId
         .Produces<ErrorMessage>(404);
 
     // DELETE
-    group.MapDelete("/{id:int}", async ([FromServices] IRepository<T> repository, [FromRoute] int id) =>
+    group.MapDelete("/{id:int}", async ([FromServices] ICompanyRepository<T> repository, [FromRoute] int id) =>
     {
         var res = await repository.Delete(id);
         return Results.Ok(res);
@@ -250,8 +260,13 @@ void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class,
         .WithTags(routeName.Capitalize());
 
     // GET all
-    group.MapGet("/", ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId) =>
+    group.MapGet("/", ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
     {
+        if (between != null)
+        {
+            return Results.Ok(repository.GetAll(companyId, cropId, componentId, between, and));
+        }
+        
         var res = repository.GetAll(companyId, cropId, componentId);
         return Results.Ok(res);
     })
@@ -284,8 +299,13 @@ void MapWaterUsageRoutes()
         .WithTags("WaterUsages");
     
     // GET all
-    group.MapGet("/", ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId) =>
+    group.MapGet("/", ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
     {
+        if (between != null)
+        {
+            return Results.Ok(repository.GetAll(companyId, between, and));
+        }
+        
         var res = repository.GetAll(companyId);
         return Results.Ok(res);
     })
@@ -318,8 +338,13 @@ void MapReservationsRoutes()
         .WithTags("Reservations");
     
     // GET all
-    group.MapGet("/", ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId) =>
+    group.MapGet("/", ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
     {
+        if (between != null)
+        {
+            return Results.Ok(repository.GetAll(farmingCompanyId, waterCompanyId, between, and));
+        }
+        
         var res =  repository.GetAll(farmingCompanyId, waterCompanyId);
         return Results.Ok(res);
     })

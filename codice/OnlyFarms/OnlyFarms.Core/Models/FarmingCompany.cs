@@ -8,7 +8,7 @@ namespace OnlyFarms.Core.Models;
     abbiamo riscontrato dei problemi con entity framework; in particolare la tabella per azienda
     agricola NON veniva creata, e nella tabella azienda agricola compariva un attributo "discriminator"
 */
-public class FarmingCompany : IHasId      // entita' Azienda Agricola
+public class FarmingCompany : ICompany      // entita' Azienda Agricola
 {
     public int Id { get; set; }
     public required string Name { get; set; }

@@ -4,10 +4,10 @@ public class ReservationRepository : IReservationRepository
 {
     private readonly DataContext _context;
     private readonly DbSet<Reservation> _reservations;
-    private readonly IRepository<FarmingCompany> _farmingCompanies;
-    private readonly IRepository<WaterCompany> _waterCompanies;
+    private readonly ICompanyRepository<FarmingCompany> _farmingCompanies;
+    private readonly ICompanyRepository<WaterCompany> _waterCompanies;
 
-    public ReservationRepository(DataContext context, IRepository<FarmingCompany> farmingCompanies, IRepository<WaterCompany> waterCompanies)
+    public ReservationRepository(DataContext context, ICompanyRepository<FarmingCompany> farmingCompanies, ICompanyRepository<WaterCompany> waterCompanies)
     {
         _context = context;
         _reservations = _context.Set<Reservation>();
@@ -20,6 +20,15 @@ public class ReservationRepository : IReservationRepository
         var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
         var waterCompany = await _waterCompanies.Get(waterCompanyId);
         foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.WaterCompanyId == waterCompany.Id)) yield return r;
+    }
+
+    public async IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId, DateTime? between, DateTime? and)
+    {
+        and ??= DateTime.Now;
+        
+        var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
+        var waterCompany = await _waterCompanies.Get(waterCompanyId);
+        foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.WaterCompanyId == waterCompany.Id && r.Timestamp >= between && r.Timestamp <= and)) yield return r;
     }
 
     public async Task<Reservation> Get(int farmingCompanyId, int waterCompanyId, int id)
@@ -72,7 +81,7 @@ public class ReservationRepository : IReservationRepository
         updatedReservation.Id = res.Id;
         updatedReservation.FarmingCompanyId = res.FarmingCompanyId;
         updatedReservation.WaterCompanyId = res.WaterCompanyId;
-        updatedReservation.TimeStamp = res.TimeStamp;       // non sovrascrivere il timestamp
+        updatedReservation.Timestamp = res.Timestamp;       // non sovrascrivere il timestamp
         
         _reservations.Entry(res).CurrentValues.SetValues(updatedReservation);
         await _context.SaveChangesAsync();

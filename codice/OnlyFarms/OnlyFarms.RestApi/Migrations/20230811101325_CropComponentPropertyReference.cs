@@ -10,6 +10,16 @@ namespace OnlyFarms.RestApi.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.RenameColumn(
+                name: "TimeStamp",
+                table: "Reservations",
+                newName: "Timestamp");
+
+            migrationBuilder.RenameColumn(
+                name: "TimeStamp",
+                table: "ActuatorsCommands",
+                newName: "Timestamp");
+
             migrationBuilder.AddColumn<int>(
                 name: "ComponentId",
                 table: "SensorsMeasurements",
@@ -35,6 +45,16 @@ namespace OnlyFarms.RestApi.Migrations
             migrationBuilder.DropColumn(
                 name: "ComponentId",
                 table: "ActuatorsCommands");
+
+            migrationBuilder.RenameColumn(
+                name: "Timestamp",
+                table: "Reservations",
+                newName: "TimeStamp");
+
+            migrationBuilder.RenameColumn(
+                name: "Timestamp",
+                table: "ActuatorsCommands",
+                newName: "TimeStamp");
         }
     }
 }

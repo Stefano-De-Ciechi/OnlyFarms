@@ -11,7 +11,7 @@ using OnlyFarms.RestApi.Data;
 namespace OnlyFarms.RestApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230805173012_CropComponentPropertyReference")]
+    [Migration("20230811101325_CropComponentPropertyReference")]
     partial class CropComponentPropertyReference
     {
         /// <inheritdoc />
@@ -62,7 +62,7 @@ namespace OnlyFarms.RestApi.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("TimeStamp")
+                    b.Property<DateTime>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -181,7 +181,7 @@ namespace OnlyFarms.RestApi.Migrations
                     b.Property<float>("Price")
                         .HasColumnType("REAL");
 
-                    b.Property<DateTime>("TimeStamp")
+                    b.Property<DateTime>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("WaterCompanyId")

@@ -22,6 +22,14 @@ public class CropComponentPropertyRepository<C, CP> : ICropComponentPropertyRepo
         var component = await _components.Get(farmingCompanyId, cropId, componentId);
         foreach (var c in _entities.Where(c => c.ComponentId == component.Id)) yield return c;
     }
+
+    public async IAsyncEnumerable<CP> GetAll(int farmingCompanyId, int cropId, int componentId, DateTime? between, DateTime? and)
+    {
+        and ??= DateTime.Now;
+
+        var component = await _components.Get(farmingCompanyId, cropId, componentId);
+        foreach (var c in _entities.Where(c => c.ComponentId == component.Id && c.Timestamp >= between && c.Timestamp <= and)) yield return c;
+    }
     
     public async Task<CP> Get(int farmingCompanyId, int cropId, int componentId, int id)
     {

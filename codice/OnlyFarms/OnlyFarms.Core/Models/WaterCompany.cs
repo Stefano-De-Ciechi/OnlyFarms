@@ -2,7 +2,7 @@
 
 namespace OnlyFarms.Core.Models;
 
-public class WaterCompany : IHasId      // entita' Azienda Idrica
+public class WaterCompany : ICompany      // entita' Azienda Idrica
 {
     public int Id { get; set; }
     public required string Name { get; set; }
