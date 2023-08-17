@@ -1,11 +1,11 @@
 ﻿namespace OnlyFarms.RestApi.Data;
 
-public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
+public class CompanyRepository<T> : ICompanyRepository<T> where T : class, ICompany
 {
     private readonly DbContext _dataContext;
     private readonly DbSet<T> _entities;
 
-    public DataContextRepository(DbContext dataContext)
+    public CompanyRepository(DbContext dataContext)
     {
         ArgumentNullException.ThrowIfNull(dataContext);
 
@@ -14,6 +14,8 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
     }
 
     public IAsyncEnumerable<T> GetAll() => _entities.AsAsyncEnumerable();
+
+    public IAsyncEnumerable<T> GetAll(string city) => _entities.Where(c => string.Equals(c.City.ToLower(), city.ToLower())).AsAsyncEnumerable();
     
     public async Task<T> Get(int id)
     {   
@@ -26,7 +28,7 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         return res;
     }
     
-    public async Task<T> Add(T entity)     // TODO questo metodo dovrebbe ritornare l'ID dell'entità inserita
+    public async Task<T> Add(T entity)
     {
         await _entities.AddAsync(entity);
         await _dataContext.SaveChangesAsync();
@@ -34,7 +36,7 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         return entity;
     }
 
-    public async Task<T> Update(int id, T updatedItem)     // TODO testare che questa funzione di modifica funzioni correttamente!
+    public async Task<T> Update(int id, T updatedItem)
     {
         var entity = await Get(id);
         
@@ -46,11 +48,11 @@ public class DataContextRepository<T> : IRepository<T> where T : class, IHasId
         return updatedItem;
     }
 
-    public async Task<T> Delete(int id)    // TODO questo metodo dovrebbe ritornare l'entità eliminata
+    public async Task<T> Delete(int id)
     {
         var entity = await Get(id);
         
-        _dataContext.Remove(entity);        // TODO verificare che vengano rimosse anche tutte le entita' collegate (es. se si cancella un azienda agricola devono essere eliminate anche tutte le sue coltivazioni, sensori, attuatori, prenotazioni, ...
+        _dataContext.Remove(entity);
         await _dataContext.SaveChangesAsync();
         
         return entity;

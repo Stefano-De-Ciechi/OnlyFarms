@@ -5,9 +5,9 @@ public class CropRepository : ICropRepository
 {
     private readonly DataContext _context;
     private readonly DbSet<Crop> _crops;
-    private readonly IRepository<FarmingCompany> _companies;
+    private readonly ICompanyRepository<FarmingCompany> _companies;
 
-    public CropRepository(DataContext context, IRepository<FarmingCompany> companies)
+    public CropRepository(DataContext context, ICompanyRepository<FarmingCompany> companies)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(companies);

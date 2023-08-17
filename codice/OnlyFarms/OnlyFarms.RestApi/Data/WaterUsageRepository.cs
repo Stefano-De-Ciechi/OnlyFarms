@@ -4,9 +4,9 @@ public class WaterUsageRepository : IWaterUsageRepository
 {
     private readonly DataContext _context;
     private readonly DbSet<WaterUsage> _usages;
-    private readonly IRepository<FarmingCompany> _companies;
+    private readonly ICompanyRepository<FarmingCompany> _companies;
 
-    public WaterUsageRepository(DataContext context, IRepository<FarmingCompany> companies)
+    public WaterUsageRepository(DataContext context, ICompanyRepository<FarmingCompany> companies)
     {
         _context = context;
         _usages = _context.Set<WaterUsage>();
@@ -17,6 +17,14 @@ public class WaterUsageRepository : IWaterUsageRepository
     {
         var company = await _companies.Get(farmingCompanyId);
         foreach (var w in _usages.Where(u => u.FarmingCompanyId == company.Id)) yield return w;
+    }
+
+    public async IAsyncEnumerable<WaterUsage> GetAll(int farmingCompanyId, DateTime? between, DateTime? and)
+    {
+        and ??= DateTime.Now;
+        
+        var company = await _companies.Get(farmingCompanyId);
+        foreach (var w in _usages.Where(u => u.FarmingCompanyId == company.Id && u.Timestamp >= between && u.Timestamp <= and)) yield return w;
     }
 
     public async Task<WaterUsage> Get(int farmingCompanyId, int id)
