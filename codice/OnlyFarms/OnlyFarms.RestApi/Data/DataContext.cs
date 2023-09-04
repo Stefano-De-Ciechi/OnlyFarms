@@ -5,7 +5,7 @@
 /* 
     la classe DataContext e' stata inserita in questa posizione del progetto (OnlyFarms.RestApi/Data) per due motivi:
     
-    1) tenendola nella cartella Data del progetto OnlyFarms.Core si otteneva un errore provando a a generare le migrations (il messaggio era "No DbContext was found in assembly OnltFarms.Api. Ensure that you're using the correct assembly ...) 
+    1) tenendola nella cartella Data del progetto OnlyFarms.Core si otteneva un errore provando a generare le migrations (il messaggio era "No DbContext was found in assembly OnltFarms.Api. Ensure that you're using the correct assembly ...) 
     2) da un punto di vista logico, la Rest Api e' l'unica parte del sistema che puo'/deve accedere direttamente al DB, quindi avere le classi relative al DbContext nella ClassLibrary condivisa OnlyFarms.Core sembrava una scelta sbagliata
 
  */
