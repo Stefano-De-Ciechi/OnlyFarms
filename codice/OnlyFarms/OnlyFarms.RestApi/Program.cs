@@ -371,10 +371,10 @@ void MapReservationsRoutes()
     
     // POST
     group.MapPut("/{id:int}", async ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromRoute] int id, [FromBody] Reservation reservation) =>
-        {
-            var res = await repository.Update(farmingCompanyId, waterCompanyId, id, reservation);
-            return Results.Ok(res);
-        })
+    {
+        var res = await repository.Update(farmingCompanyId, waterCompanyId, id, reservation);
+        return Results.Ok(res);
+    })
         .Produces<Reservation>()
         .Produces<ErrorMessage>(404);
 }
