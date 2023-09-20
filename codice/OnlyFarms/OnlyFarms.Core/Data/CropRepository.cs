@@ -1,4 +1,4 @@
-namespace OnlyFarms.RestApi.Data;
+namespace OnlyFarms.Core.Data;
 
 // TODO la classe potrebbe essere resa generica per funzionare con tutte le entita' che richiedono un farmingCompanyId (ma devono anche implementare tutti i verbi HTTP)
 public class CropRepository : ICropRepository

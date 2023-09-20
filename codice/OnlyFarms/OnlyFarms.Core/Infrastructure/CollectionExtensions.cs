@@ -1,6 +1,4 @@
-﻿using OnlyFarms.Core.Data;
-
-namespace OnlyFarms.Core.Infrastructure;
+﻿namespace OnlyFarms.Core.Infrastructure;
 
 public static class CollectionExtensions
 {

@@ -1,4 +1,4 @@
-namespace OnlyFarms.RestApi.Data;
+namespace OnlyFarms.Core.Data;
 
 // C e' il tipo del componente (Attuatore o Sensore), CP e' il tipo della proprieta' del componente (Command o Measurement)
 public class CropComponentPropertyRepository<C, CP> : ICropComponentPropertyRepository<CP> where C : class, IHasId, ICropComponent where CP : class, IHasId, ICropComponentProperty

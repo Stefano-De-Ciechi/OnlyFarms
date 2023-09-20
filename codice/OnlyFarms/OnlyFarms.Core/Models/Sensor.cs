@@ -1,7 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using OnlyFarms.Core.Data;
-
-namespace OnlyFarms.Core.Models;
+﻿namespace OnlyFarms.Core.Models;
 
 public record Sensor : ICropComponent       // entita' Sensore
 {

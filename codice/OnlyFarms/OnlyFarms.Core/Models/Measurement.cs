@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using OnlyFarms.Core.Data;
-
-namespace OnlyFarms.Core.Models;
+﻿namespace OnlyFarms.Core.Models;
 
 public record Measurement : IHasId, ICropComponentProperty      // entita' Misurazione (relativa ai sensori)
 {

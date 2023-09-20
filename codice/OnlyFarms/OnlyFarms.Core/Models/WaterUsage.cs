@@ -1,6 +1,4 @@
-﻿using OnlyFarms.Core.Data;
-
-namespace OnlyFarms.Core.Models;
+﻿namespace OnlyFarms.Core.Models;
 
 public record WaterUsage : IHasId    // entita' Consumo (di risorse idriche, relativa ad un'azienda Agricola)
 {

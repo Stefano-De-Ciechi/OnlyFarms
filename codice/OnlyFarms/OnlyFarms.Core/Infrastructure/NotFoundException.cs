@@ -1,4 +1,4 @@
-namespace OnlyFarms.RestApi.Infrastructure;
+namespace OnlyFarms.Core.Infrastructure;
 
 public class NotFoundException<T> : Exception where T : IHasId
 {

@@ -1,5 +1,3 @@
-using OnlyFarms.Core.Models;
-
 namespace OnlyFarms.Core.Data;
 
 public interface ICropRepository

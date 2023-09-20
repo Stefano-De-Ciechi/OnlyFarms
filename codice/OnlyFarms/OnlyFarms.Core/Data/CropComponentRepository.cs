@@ -1,4 +1,4 @@
-namespace OnlyFarms.RestApi.Data;
+namespace OnlyFarms.Core.Data;
 
 public class CropComponentRepository<T> : ICropComponentRepository<T> where T : class, ICropComponent
 {
