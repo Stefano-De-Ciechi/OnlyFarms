@@ -51,11 +51,7 @@ public class CropRepository : ICropRepository
     public async Task<Crop> Update(int farmingCompanyId, int cropId, Crop cropUpdate)
     {
         var crop = await Get(farmingCompanyId, cropId);
-        if (crop == null)
-        {
-            throw new NotFoundException<Crop>(cropId);
-        }
-
+        
         cropUpdate.Id = crop.Id;
         cropUpdate.FarmingCompanyId = crop.FarmingCompanyId;
 
@@ -78,11 +74,7 @@ public class CropRepository : ICropRepository
     public async Task<Crop> Delete(int farmingCompanyId, int cropId)
     {
         var crop = await Get(farmingCompanyId, cropId);
-        if (crop == null)
-        {
-            throw new NotFoundException<Crop>(cropId);
-        }
-
+        
         _crops.Remove(crop);
         
         var company = await _companies.Get(farmingCompanyId);

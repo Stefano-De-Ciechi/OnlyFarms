@@ -4,7 +4,7 @@ public record Measurement : IHasId, ICropComponentProperty      // entita' Misur
 {
     public int Id { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.Now;
-    public required float Value { get; set; }
+    public required int Value { get; set; }
     public required string MeasuringUnit { get; set; }
     
     /*

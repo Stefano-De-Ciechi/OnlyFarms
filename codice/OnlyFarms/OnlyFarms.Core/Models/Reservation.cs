@@ -4,7 +4,7 @@ public record Reservation : IHasId       // entita' Prenotazione
 {
     public int Id { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.Now;
-    public required float BookedQuantity { get; set; }
+    public required int BookedQuantity { get; set; }
     public required float Price { get; set; }
     public bool OnGoing { get; set; }      // indica se una prenotazione e' correntemente attiva
     

@@ -4,7 +4,7 @@ public record WaterUsage : IHasId    // entita' Consumo (di risorse idriche, rel
 {
     public int Id { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.Now;
-    public required float ConsumedQuantity { get; set; }
+    public required int ConsumedQuantity { get; set; }
     
     public int FarmingCompanyId { get; set; }   // riferimento all'azienda agricola
 }

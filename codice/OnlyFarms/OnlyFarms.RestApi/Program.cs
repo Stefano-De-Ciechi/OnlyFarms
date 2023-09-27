@@ -64,6 +64,7 @@ MapCropComponentsPropertiesRoutes<Actuator, Command>("commands");
 MapCropComponentsPropertiesRoutes<Sensor, Measurement>("measurements");
 MapWaterUsageRoutes();
 MapReservationsRoutes();
+MapWaterLimitRoutes();
 
 app.Run();
 
@@ -99,10 +100,12 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     services.AddScoped<ICropComponentPropertyRepository<Measurement>>(serviceProvider => new CropComponentPropertyRepository<Sensor, Measurement>(dataContext, GetService<ICropComponentRepository<Sensor>>(serviceProvider)));
     services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider)));
     services.AddScoped<IReservationRepository>(serviceProvider => new ReservationRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
+    services.AddScoped<IWaterLimitRepository>(serviceProvider => new WaterLimitRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
 }
 
 // TODO aggiungere i metodi di documentazione swagger a tutti gli endpoint
 // TODO aggiungere query ad alcuni endpoint (es. per citta' alle aziende, per intervallo di tempo alle misurazioni ecc.)
+// TODO aggiornare le classi e le repository, modificando i campi come int ...ID con il tipo di classe a cui fanno riferimento (EF li rimpiazza con la propria chiave primaria in automatico, almeno credo; vedi WaterLimit)
 
 void MapCompanyRoutes<T>(string routeName) where T : class, ICompany
 {
@@ -345,7 +348,7 @@ void MapReservationsRoutes()
             return Results.Ok(repository.GetAll(farmingCompanyId, waterCompanyId, between, and));
         }
         
-        var res =  repository.GetAll(farmingCompanyId, waterCompanyId);
+        var res = repository.GetAll(farmingCompanyId, waterCompanyId);
         return Results.Ok(res);
     })
         .Produces<IAsyncEnumerable<Reservation>>()
@@ -376,6 +379,58 @@ void MapReservationsRoutes()
         return Results.Ok(res);
     })
         .Produces<Reservation>()
+        .Produces<ErrorMessage>(404);
+}
+
+void MapWaterLimitRoutes()
+{
+    const string fullRoute = $"{ API_PREFIX }/waterCompanies/{{companyId:int}}/limits";
+    var group = app.MapGroup(fullRoute)
+        .WithTags("WaterLimits");
+    
+    // GET all
+    group.MapGet("/", ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId) =>
+    {
+        var res = repository.GetAll(companyId);
+        return Results.Ok(res);
+    })
+        .Produces<IAsyncEnumerable<WaterLimit>>()
+        .Produces<ErrorMessage>(404);
+    
+    // GET single
+    group.MapGet("/{farmingCompanyId:int}", async ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId, [FromRoute] int farmingCompanyId) =>
+    {
+        var res = await repository.Get(companyId, farmingCompanyId);
+        return Results.Ok(res);
+    })
+        .Produces<WaterLimit>()
+        .Produces<ErrorMessage>(404);
+
+    // POST
+    group.MapPost("/", async ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId, [FromQuery] int farmingCompanyId, [FromQuery] int limit) =>
+    {
+        var res = await repository.Add(companyId, farmingCompanyId, limit);
+        return ResourceCreated(fullRoute, res);
+    })
+        .Produces<WaterLimit>()
+        .Produces<ErrorMessage>(404);
+    
+    // PUT
+    group.MapPut("/{id:int}", async ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId, [FromRoute] int id, [FromQuery] int newLimit) =>
+    {
+        var res = await repository.Update(id, newLimit);
+        return Results.Ok(res);
+    })
+        .Produces<WaterLimit>()
+        .Produces<ErrorMessage>(404);
+    
+    // DELETE
+    group.MapDelete("/{id:int}", async ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
+    {
+        var res = await repository.Delete(id);
+        return Results.Ok(res);
+    })
+        .Produces<WaterLimit>()
         .Produces<ErrorMessage>(404);
 }
 
