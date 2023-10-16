@@ -88,6 +88,30 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(Roles.IoTSubSystem, policy =>
     {
         policy.RequireRole(Roles.IoTSubSystem);
+    })
+    
+    .AddPolicy("AnyAuthUser", policy =>
+    {
+        policy.RequireAssertion(context => (context.User.IsInRole(Roles.Admin) || context.User.IsInRole(Roles.FarmManager) || context.User.IsInRole(Roles.WaterManager)));
+    })
+    
+    /*
+        spiegazione delle due policy distinte:
+        per avere un metodo generico MapCompanyRoutes<T> che funzioni con entrambi i tipi di azienda, c'e' bisogno di un meccanismo
+        per definire quali autorizzazioni devono essere possedute dall'utente, che sono comuni per i due metodi GET All e GET, ma
+        differiscono per i metodi POST, PUT e DELETE in cui un utente del tipo FarmManager NON puo' agire su compagnie di tipo
+        WaterCompany e viceversa; per fare questo, in tali verbi e' applicato il metodo .RequireAuthorization("<policy name>") che, 
+        a tempo di compilazione (quando i metodi generici vengono "espansi" in metodi con i giusti tipi), controlla quale tipo di azienda
+        si sta mappando e passa la policy corretta da applicare
+    */
+    .AddPolicy("FarmingCompanyPolicy", policy =>
+    {
+        policy.RequireAssertion(context => (context.User.IsInRole(Roles.Admin) || context.User.IsInRole(Roles.FarmManager)));
+    })
+    
+    .AddPolicy("WaterCompanyPolicy", policy =>
+    {
+        policy.RequireAssertion(context => (context.User.IsInRole(Roles.Admin) || context.User.IsInRole(Roles.WaterManager)));
     });
 
 var app = builder.Build();
@@ -194,14 +218,11 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
 
 #endregion
 
-// TODO aggiungere i metodi di documentazione swagger a tutti gli endpoint (anche 401 Unauthorized e 403 Forbidden)
-// TODO aggiungere query ad alcuni endpoint (es. per citta' alle aziende, per intervallo di tempo alle misurazioni ecc.)
-// TODO aggiornare le classi e le repository, modificando i campi come int ...ID con il tipo di classe a cui fanno riferimento (EF li rimpiazza con la propria chiave primaria in automatico, almeno credo; vedi WaterLimit)
+// TODO ??? aggiornare le classi e le repository, modificando i campi come int ...ID con il tipo di classe a cui fanno riferimento (EF li rimpiazza con la propria chiave primaria in automatico, almeno credo; vedi WaterLimit)
 
 #region ===== Custom Routes ===== 
 
-// TODO i due tipi di azienda hanno requisiti di Autorizzazione differenti, forse ha senso NON usare un metodo generico per mappare le routes
-// Routes for FarmingCompanies and WaterCompanies
+// Routes per FarmingCompanies e WaterCompanies
 void MapCompanyRoutes<T>(string routeName) where T : class, ICompany
 {
     var fullRoute = $"{API_PREFIX}/{ routeName }";
@@ -209,67 +230,58 @@ void MapCompanyRoutes<T>(string routeName) where T : class, ICompany
         .WithTags(routeName.Capitalize());
     
     // GET all
-    group.MapGet("/",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            ([FromServices] ICompanyRepository<T> repository, [FromQuery] string? city) =>
-            {
-                if (city == null)
-                {
-                    return repository.GetAll();
-                }
-
-                return repository.GetAll(city);
-            })
+    group.MapGet("/", ([FromServices] ICompanyRepository<T> repository, [FromQuery] string? city) =>
+    {
+        var res = city == null ? repository.GetAll() : repository.GetAll(city);
+        return Results.Ok(res);
+    })
+        .RequireAuthorization("AnyAuthUser")    /* endpoint accessibile da tutti i tipi di utente autenticati */
         .Produces<IAsyncEnumerable<T>>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403);
     
     // GET single
-    group.MapGet("/{id:int}",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            async ([FromServices] ICompanyRepository<T> repository, int id) =>
+    group.MapGet("/{id:int}", async ([FromServices] ICompanyRepository<T> repository, int id) =>
     {
         var res = await repository.Get(id);
         return Results.Ok(res);
     })
+        .RequireAuthorization("AnyAuthUser")
         .Produces<T>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
 
     // POST
-    group.MapPost("/",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            async ([FromServices] ICompanyRepository<T> repository, [FromBody] T newResource) =>
+    group.MapPost("/", async ([FromServices] ICompanyRepository<T> repository, [FromBody] T newResource) =>
     {
         var res = await repository.Add(newResource);
         return ResourceCreated(fullRoute, res); // Results.Created imposta nell'Header della Response anche la locazione della nuova risorsa
     })
+        .RequireAuthorization(typeof(T) == typeof(FarmingCompany) ? "FarmingCompanyPolicy" : "WaterCompanyPolicy")      /* la policy richiesta cambia a seconda del tipo generico che viene "rimpiazzato a T" a tempo di compilazione */
         .Produces<T>(201)
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403);
 
     // PUT
-    group.MapPut("/{id:int}",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            async ([FromServices] ICompanyRepository<T> repository, [FromRoute] int id, [FromBody] T updatedResource) =>
+    group.MapPut("/{id:int}", async ([FromServices] ICompanyRepository<T> repository, [FromRoute] int id, [FromBody] T updatedResource) =>
     {
         var res = await repository.Update(id, updatedResource);
         return Results.Ok(res);
     })
+        .RequireAuthorization(typeof(T) == typeof(FarmingCompany) ? "FarmingCompanyPolicy" : "WaterCompanyPolicy")
         .Produces<T>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
 
     // DELETE
-    group.MapDelete("/{id:int}",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            async ([FromServices] ICompanyRepository<T> repository, [FromRoute] int id) =>
+    group.MapDelete("/{id:int}", async ([FromServices] ICompanyRepository<T> repository, [FromRoute] int id) =>
     {
         var res = await repository.Delete(id);
         return Results.Ok(res);
     })
+        .RequireAuthorization(typeof(T) == typeof(FarmingCompany) ? "FarmingCompanyPolicy" : "WaterCompanyPolicy")
         .Produces<T>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
@@ -348,7 +360,7 @@ void MapCropsRoutes()
         .Produces<ErrorMessage>(404);
 }
 
-// Routes for Actuators and Sensors
+// Routes per Attuatori e Sensori
 void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponent
 {
     var fullRoute = $"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/{routeName}";
@@ -408,17 +420,18 @@ void MapCropComponentsRoutes<T>(string routeName) where T : class, ICropComponen
         .Produces<ErrorMessage>(404);
 }
 
-// Routes for Actuators' Commands and Sensors' Measurements
-void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class, IHasId, ICropComponent where CP : class, IHasId, ICropComponentProperty
+// Routes per Comandi degli Attuatori e Misurazioni dei Sensori
+// TC sta per Type-Component, TCp sta per Type-ComponentProperty
+void MapCropComponentsPropertiesRoutes<TC, TCp>(string routeName) where TC : class, IHasId, ICropComponent where TCp : class, IHasId, ICropComponentProperty
 {
-    var fullRoute = $"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/{ typeof(C).Name.UnCapitalize() }s/{{componentId:int}}/{ routeName }";
+    var fullRoute = $"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/{ typeof(TC).Name.UnCapitalize() }s/{{componentId:int}}/{ routeName }";
     var group = app.MapGroup(fullRoute)
         .WithTags(routeName.Capitalize());
 
     // GET all
     group.MapGet("/",
             [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.IoTSubSystem}")]
-            ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
+            ([FromServices] ICropComponentPropertyRepository<TCp> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
     {
         if (between != null)
         {
@@ -428,7 +441,7 @@ void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class,
         var res = repository.GetAll(companyId, cropId, componentId);
         return Results.Ok(res);
     })
-        .Produces<IAsyncEnumerable<CP>>()
+        .Produces<IAsyncEnumerable<TCp>>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
@@ -436,12 +449,12 @@ void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class,
     // GET single
     group.MapGet("/{id:int}",
             [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.IoTSubSystem}")]
-            async ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromRoute] int id) =>
+            async ([FromServices] ICropComponentPropertyRepository<TCp> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromRoute] int id) =>
     {
         var res = await repository.Get(companyId, cropId, componentId, id);
         return Results.Ok(res);
     })
-        .Produces<CP>()
+        .Produces<TCp>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
@@ -449,12 +462,12 @@ void MapCropComponentsPropertiesRoutes<C, CP>(string routeName) where C : class,
     // POST
     group.MapPost("/",
             [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.IoTSubSystem}")]
-            async ([FromServices] ICropComponentPropertyRepository<CP> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromBody] CP component) =>
+            async ([FromServices] ICropComponentPropertyRepository<TCp> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromRoute] int componentId, [FromBody] TCp component) =>
     {
         var res = await repository.Add(companyId, cropId, componentId, component);
         return ResourceCreated(fullRoute, res);
     })
-        .Produces<CP>(201)
+        .Produces<TCp>(201)
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
@@ -467,9 +480,7 @@ void MapWaterUsageRoutes()
         .WithTags("WaterUsages");
     
     // GET all
-    group.MapGet("/",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
+    group.MapGet("/", ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
     {
         if (between != null)
         {
@@ -479,19 +490,19 @@ void MapWaterUsageRoutes()
         var res = repository.GetAll(companyId);
         return Results.Ok(res);
     })
+        .RequireAuthorization("AnyAuthUser")
         .Produces<IAsyncEnumerable<WaterUsage>>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
 
     // GET single
-    group.MapGet("/{id:int}",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
+    group.MapGet("/{id:int}", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
     {
         var crop = await repository.Get(companyId, id);
         return Results.Ok(crop);
     })
+        .RequireAuthorization("AnyAuthUser")
         .Produces<WaterUsage>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
@@ -518,9 +529,7 @@ void MapReservationsRoutes()
         .WithTags("Reservations");
     
     // GET all
-    group.MapGet("/",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
+    group.MapGet("/", ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
     {
         if (between != null)
         {
@@ -530,19 +539,19 @@ void MapReservationsRoutes()
         var res = repository.GetAll(farmingCompanyId, waterCompanyId);
         return Results.Ok(res);
     })
+        .RequireAuthorization("AnyAuthUser")
         .Produces<IAsyncEnumerable<Reservation>>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
     
     // GET single
-    group.MapGet("/{id:int}",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            async ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromRoute] int id) =>
+    group.MapGet("/{id:int}", async ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromRoute] int id) =>
     {
         var res = await repository.Get(farmingCompanyId, waterCompanyId, id);
         return Results.Ok(res);
     })
+        .RequireAuthorization("AnyAuthUser")
         .Produces<Reservation>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
@@ -550,7 +559,7 @@ void MapReservationsRoutes()
     
     // POST
     group.MapPost("/",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager}")]       // only admins and FarmingCompany Managers can create a new Reservation
+            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager}")]       /* solo admin e FarmingCompany-Manager possono creare una nuova Prenotazione */
             async ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromBody] Reservation reservation) =>
     {
         var res = await repository.Add(farmingCompanyId, waterCompanyId, reservation);
@@ -563,7 +572,7 @@ void MapReservationsRoutes()
     
     // PUT
     group.MapPut("/{id:int}",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.WaterManager}")]      // only admins and WaterCompany Managers can update a Reservaion
+            [Authorize(Roles = $"{Roles.Admin},{Roles.WaterManager}")]      /* solo admin e WaterCompany-Manager possono aggiornare una Prenotazione, ad esempio per Confermarla o meno */
             async ([FromServices] IReservationRepository repository, int farmingCompanyId, int waterCompanyId, [FromRoute] int id, [FromBody] Reservation reservation) =>
     {
         var res = await repository.Update(farmingCompanyId, waterCompanyId, id, reservation);
@@ -582,26 +591,24 @@ void MapWaterLimitRoutes()
         .WithTags("WaterLimits");
     
     // GET all
-    group.MapGet("/",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId) =>
+    group.MapGet("/", ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId) =>
     {
         var res = repository.GetAll(companyId);
         return Results.Ok(res);
     })
+        .RequireAuthorization("AnyAuthUser")
         .Produces<IAsyncEnumerable<WaterLimit>>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
     
     // GET single
-    group.MapGet("/{farmingCompanyId:int}",
-            [Authorize(Roles = $"{Roles.Admin},{Roles.FarmManager},{Roles.WaterManager}")]
-            async ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId, [FromRoute] int farmingCompanyId) =>
+    group.MapGet("/{farmingCompanyId:int}", async ([FromServices] IWaterLimitRepository repository, [FromRoute] int companyId, [FromRoute] int farmingCompanyId) =>
     {
         var res = await repository.Get(companyId, farmingCompanyId);
         return Results.Ok(res);
     })
+        .RequireAuthorization("AnyAuthUser")
         .Produces<WaterLimit>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
