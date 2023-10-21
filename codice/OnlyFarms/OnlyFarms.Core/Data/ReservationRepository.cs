@@ -56,6 +56,7 @@ public class ReservationRepository : IReservationRepository
             previous.OnGoing = false;   // se si trova una prenotazione attiva viene resa inattiva
         }
 
+        // TODO rivedere sta parte se si decide di aggiungere il campo Confirmed alle Reservations (dopo la POST di un' azienda agricola deve essere confermata dall' azienda idrica per diventare attiva e rimpiazzare la Reservation precedente)
         reservation.OnGoing = true;
         reservation.FarmingCompanyId = farmingCompanyId;
         reservation.WaterCompanyId = waterCompanyId;

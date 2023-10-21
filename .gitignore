@@ -13,6 +13,9 @@ codice/OnlyFarms/OnlyFarms.RestApi/obj
 codice/OnlyFarms/OnlyFarms.RestApi/OnlyFarms.sqlite-shm
 codice/OnlyFarms/OnlyFarms.RestApi/OnlyFarms.sqlite-wal
 
+codice/OnlyFarms/OnlyFarms.WebApp/bin
+codice/OnlyFarms/OnlyFarms.WebApp/obj
+
 codice/OnlyFarms/OnlyFarms.sln.DotSettings.user
 codice/OnlyFarms/OnlyFarms.RestApi/.idea/
 codice/OnlyFarms/OnlyFarms.RestApi/Folder.DotSettings.user

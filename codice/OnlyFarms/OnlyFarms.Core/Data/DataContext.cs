@@ -1,8 +1,10 @@
-﻿namespace OnlyFarms.Core.Data;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+namespace OnlyFarms.Core.Data;
 
 // TODO quando si implementa l'autenticazione, questa classe deve estendere IdentityDbContext !!!
 
-public class DataContext : DbContext
+public class DataContext : IdentityDbContext
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     { }
