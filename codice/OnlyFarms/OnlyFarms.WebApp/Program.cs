@@ -57,7 +57,7 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
     var options = new DbContextOptionsBuilder<DataContext>()       // DataContext e' definita in OnlyFarms.Core
-        .UseSqlite(connectionString, b => b.MigrationsAssembly("OnlyFarms.RestApi"))    // TODO quando si aggiungera' la parte OnlyFarms.WebApp, e' piu' logico spostare il database e le migrazioni in quel progetto!
+        .UseSqlite(connectionString, b => b.MigrationsAssembly("OnlyFarms.RestApi"))
         .Options;
     var dataContext = builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlite(connectionString));
