@@ -7,4 +7,5 @@ public interface IReservationRepository
     Task<Reservation> Get(int farmingCompanyId, int waterCompanyId, int id);
     Task<Reservation> Add(int farmingCompanyId, int waterCompanyId, Reservation reservation);
     Task<Reservation> Update(int farmingCompanyId, int waterCompanyId, int id, Reservation updatedReservation);
+    IAsyncEnumerable<Reservation> GetWaterComp(int waterCompanyId);
 }

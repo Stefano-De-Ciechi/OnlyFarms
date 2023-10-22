@@ -1,0 +1,108 @@
+body{
+    background-image: url(../img/pattern.jpeg);
+}
+
+.container{
+    background-color: #EFEBE9;
+    margin-left: 50px;
+    margin-right: 50px;
+    text-align: center;
+}
+
+#header{
+    font-family: copperplate;
+    text-align: center;
+    border-bottom: 1px solid black;
+}
+
+.fields-group{
+    height: 600px;
+    width: calc((90% - 100px) / 3);
+    border-radius: 5px;
+    text-align: center;
+    display: inline-block;
+    margin-left: 57px;
+    margin-right: 40px;
+    margin-top: 50px;
+    background-color: #e4e1df;
+}
+
+.fields-group:hover{
+    background-color: #D7CCC8;
+    box-shadow: 0 0 10px #4E342E; /* Add a subtle box shadow on hover */
+
+}
+
+img{
+    width: 100%;
+    height: 350px;
+    border-radius: 5px;
+    image-resolution: from-image 300dpi;
+}
+
+.desc-group{
+    color: #795548;
+    font-size: 20px;
+}
+
+
+#stripe{
+    height: 400px;
+    text-align: center;
+}
+
+#navbar-logo{
+    height: 50px;
+    width: 50px;
+}
+
+.navbar{
+    text-align: center;
+}
+
+#field{
+    height: 500px;
+}
+
+#heading{
+    font-size: 50px;
+    color: ivory;
+    position: absolute;
+    top: 33%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Teko', sans-serif;
+    font-weight: bolder;
+}
+
+.striped-table {
+    margin-top: 150px;
+    width: 400px;
+    margin-left: 160px;
+    border-collapse: collapse;
+    display: inline-block;
+}
+
+.striped-table th, .striped-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.striped-table tbody tr:nth-child(odd) {
+    background-color: white;
+}
+
+.striped-table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.btn{
+    margin-left: 20px;
+    margin-top: 40px;
+    margin-bottom: 80px;
+}
+
+.table{
+    margin-top: 150px;
+}

@@ -1,0 +1,58 @@
+@page "/FarmingCompanies/{id:int}"
+@model OnlyFarms.WebApp.Pages.CropsModel
+@{
+    <header>
+        <link rel="stylesheet" type="text/css" href="~/css/myStyle.css">
+    </header>
+
+
+    <div>
+        <div class="container">
+            <div id="stripe">
+                <h1 id="heading"> CROPS </h1>
+                <img src="img/stripe.jpeg" id="field">
+            </div>
+
+            <form method="post">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">SELECT</th>
+                            <th scope="col">FARM ID</th>
+                            <th scope="col">IDEAL HUMIDITY</th>
+                            <th scope="col">IRRIGATION TYPE</th>
+                            <th scope="col">AREA</th>
+                            <th scope="col">TAG </th>
+                            <th scope="col">WATER NEEDS </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @await foreach (var crops in Model.Crops)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="selectedItems" value="@crops.Id" id="selectComp-@crops.Id" />
+                                </td>
+                                <td><a href="/FarmingCompanies/@crops.FarmingCompanyId/@crops.Id">@crops.FarmingCompanyId</a></td>
+                                <td>@crops.IdealHumidity</td>
+                                <td>@crops.IrrigationType</td>
+                                <td>@crops.SurfaceArea</td>
+                                <td>@crops.Tag</td>
+                                <td>@crops.WaterNeeds</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <span> SELECT THE WATER COMPANY THAT YOU WANT TO REMOVE</span>
+                <br />
+                <button type="button" class="btn btn-success">ADD</button>
+                <button type="button" class="btn btn-danger">REMOVE</button>
+            </form>
+
+
+            <br><button type="button" class="btn btn-success">ADD</button>
+            <button type="button" class="btn btn-danger">REMOVE</button>
+        </div>
+    </div>
+
+}

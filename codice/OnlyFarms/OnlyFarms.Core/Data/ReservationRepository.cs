@@ -89,4 +89,11 @@ public class ReservationRepository : IReservationRepository
 
         return updatedReservation;
     }
+    
+    public async IAsyncEnumerable<Reservation> GetWaterComp(int waterCompanyId)
+    {
+        var waterCompany = await _waterCompanies.Get(waterCompanyId);
+        foreach (var r in _reservations.Where(r => r.WaterCompanyId == waterCompany.Id)) yield return r;
+    }
+
 }
