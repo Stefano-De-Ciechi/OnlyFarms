@@ -53,24 +53,20 @@ TService GetService<TService>(IServiceProvider services) where TService : notnul
 
 void InjectRepositories(IServiceCollection services, IConfiguration configuration)
 {
-    //var connectionString = configuration.GetConnectionString("(default)");
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-    var options = new DbContextOptionsBuilder<DataContext>()       // DataContext e' definita in OnlyFarms.Core
+    /*var options = new DbContextOptionsBuilder<DataContext>()       // DataContext e' definita in OnlyFarms.Core
         .UseSqlite(connectionString, b => b.MigrationsAssembly("OnlyFarms.RestApi"))
-        .Options;
-    var dataContext = builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlite(connectionString));
+        .Options;*/
+    
+    builder.Services.AddDbContext<DataContext>(options => options.UseSqlite(connectionString));
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
     //dataContext.Database.EnsureCreated();     // rimosso perche' ri-creava il DB ogni volta che si provava ad eseguire una migrazione, comportando poi degli errori (Tabelle gia' esistenti) quando si eseguiva il comando "database update"
     
-    //services.AddScoped<ICompanyRepository<Reservation>>(_ => new CompanyRepository<Reservation>(dataContext));
-    
     /*Questa dichiarazione di injection è stata fatta perchè noi dichiaravano dataContext come var creando un conflitto con addDbContext, facendo cosi avveniva
      * un'implementazione manuale che non è molto utile in quanto viene fatto tutto in automatio creando quindi un problema.
     */
-
     services.AddScoped<ICompanyRepository<FarmingCompany>>(serviceProvider=> new CompanyRepository<FarmingCompany>(GetService<DataContext>(serviceProvider)));
     services.AddScoped<ICompanyRepository<WaterCompany>>(serviceProvider => new CompanyRepository<WaterCompany>(GetService<DataContext>(serviceProvider)));
     services.AddScoped<ICropRepository>(serviceProvider => new CropRepository(GetService<DataContext>(serviceProvider), GetService<ICompanyRepository<FarmingCompany>>(serviceProvider)));

@@ -1,6 +1,6 @@
-namespace OnlyFarms.RestApi.Infrastructure;
+namespace OnlyFarms.Core.Infrastructure;
 
-public static class Roles
+public class Roles
 {
     public const string Admin = "admin";
     public const string FarmManager = "farmManager";
