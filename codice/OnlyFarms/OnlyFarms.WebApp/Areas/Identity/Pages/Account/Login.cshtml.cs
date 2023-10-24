@@ -17,6 +17,12 @@ using Microsoft.Extensions.Logging;
 
 namespace OnlyFarms.WebApp.Areas.Identity.Pages.Account
 {
+    /*
+     * AllowAnonymous e' stato aggiunto qui perche' la FallbackPolicy e' stata impostata a RequireAuthenticatedUser;
+     * senza questo attributo, si entrava in una sorta di "redirection loop", in cui si veniva reindirizzati alla pagina
+     * di login per la quale pero' bisgnava gia' essere autenticati!
+     */
+    [AllowAnonymous]
     public class LoginModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;

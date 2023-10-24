@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,11 +13,25 @@ builder.Services.AddDbContext<DataContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 */
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<DataContext>();
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
 
 builder.Services.AddRazorPages();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(Roles.Admin, policy =>
+        //policy.RequireRole(Roles.Admin)
+        policy.RequireClaim(nameof(Roles), Roles.Admin)     // TODO capire quale delle due versioni sia corretta
+    );
+    
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 var app = builder.Build();
 
@@ -38,9 +54,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+await AddAdmin();
 
 app.Run();
 
@@ -77,4 +96,32 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(GetService<DataContext>(serviceProvider), GetService<ICompanyRepository<FarmingCompany>>(serviceProvider)));
     services.AddScoped<IReservationRepository>(serviceProvider => new ReservationRepository(GetService<DataContext>(serviceProvider), GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
     services.AddScoped<IWaterLimitRepository>(serviceProvider => new WaterLimitRepository(GetService<DataContext>(serviceProvider), GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
+}
+
+async Task AddAdmin()
+{
+    var services = app!.Services!.CreateScope().ServiceProvider;            // si crea uno scope, visto che in questo punto del programma l'applicazione non e' ancora stata avviata
+
+    var adminUser = new User();     // crea un oggetto che contiene due campi di tipo stringa
+    app.Configuration.Bind("Admin", adminUser);     // legge dal file di configurazione (in questo caso user secrets) l'oggetto "Admin" : { "UserName" : "...", "Password" : "..." } e salva i dati letti nell'oggetto adminUser
+
+    var usersManager = services.GetRequiredService<UserManager<IdentityUser>>();         // questa e' una classe creata in automatico da asp.net per gestire gli utenti (probabilmente accede al DB); viene "presa" dal contenitore delle dipendenze; UserManager viene iniettato nelle dipendenze dal metodo builder.Services.AddAuthentication()
+
+    var user = new IdentityUser()
+    {
+        UserName = adminUser.UserName!,
+        EmailConfirmed = true,      // aggiunta altrimenti il login NON funzionava (invalid login credentials error)
+    };               // crea un istanza di IdentityUser (il tipo di utente salvato nel DB) passandogli l'username letto dagli user serets
+    
+    if ((await usersManager.CreateAsync(user, adminUser.Password!)).Succeeded)       // CreateAsync si aspetta in input un'istanza di IdentityUser e una stringa come password
+    {
+        await usersManager.AddClaimAsync(user, new Claim(nameof(Roles), Roles.Admin));      // Role e' una classe statica "di convenienza" definita in Data/Role.cs
+    }
+}
+
+// TODO spostare da qualche parte; magari bisogna aggiungere dei campi aggiuntivi, es. a quale azienda (e quale tipo di azienda) fa parte (gli admin NON hanno azienda)
+internal record User
+{
+    public string? UserName { get; set; }
+    public string? Password { get; set; }
 }
