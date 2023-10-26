@@ -21,6 +21,23 @@ builder.Services.AddSession();
 
 builder.Services.AddRazorPages();
 
+// aggiunta dell'autenticazione con Oauth2 (provider Google)    --> installato il pacchetto NuGet "Microsof.AspNetCore.Authentication.Google"
+builder.Services.AddAuthentication().AddGoogle(googleOptions =>
+{
+    // builder.Configuration accede automaticamente a tutti i file di configurazione (anche gli user-secrets) e li rende accessibili come se fosse una hash table
+    var configuration = builder.Configuration;
+    
+    /* questi due dati sono salvati nei .NET user-secrets (file di configurazione "nascosto" che solitamente non viene tracciato nei Version Control Systems tipo git)
+        - in Rider tasto destro sul progetto --> Tools --> .NET user secrets
+        - in Visual Studio tasto destro sul progetto --> manage user secrets
+        - da cli --> dotnet user secrets init --> dotnet user-secrets set "<key>" "<value>" --> oppure un modo piu' veloce cat ./input.json | dotnet user-secrets set in cui in input.json si inseriscono tutti i segreti in una volta sola (ricordarsi di cancellare il file)
+
+    per generarli: https://learn.microsoft.com/it-it/aspnet/core/security/authentication/social/google-logins?view=aspnetcore-7.0
+    */
+    googleOptions.ClientId = configuration["Authentication:Google:ClientId"]!;
+    googleOptions.ClientSecret = configuration["Authentication:Google:ClientSecret"]!;
+});
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(Roles.Admin, policy =>

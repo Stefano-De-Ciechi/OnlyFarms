@@ -8,9 +8,20 @@ Per far funzionare l'applicazione bisogna impostare gli user-secrets:
 incollare l'oggetto json:
 
 {
+    "Authentication" :
+    {
+        "Google" :
+        {
+            "ClientId" : "913049808548-g7p8m5ccc2d6l1fr7mrq2om9mpm28l1j.apps.googleusercontent.com",
+            "ClientSecret" : "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"
+        }
+    },
     "Admin" :
     {
         "UserName" : "admin@admin.com",
         "Password" : "Pa$$w0rd"
     }
 }
+
+ClientId e ClientSecret di Google generati seguendo il tutorial: https://learn.microsoft.com/it-it/aspnet/core/security/authentication/social/google-logins?view=aspnetcore-7.0
+per generarli ho usato l'account google dell'universita'; NON condividere questi dati con nessuno
