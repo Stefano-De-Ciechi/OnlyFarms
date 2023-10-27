@@ -12,8 +12,14 @@ public class IndexModel : PageModel
         _logger = logger;
     }
 
-    public void OnGet()
+    public IActionResult OnGet()
     {
+        // TODO aggiungere qui la logica per avere pagine di default in base al tipo di utente?
+        if (User.Identity != null && User.Identity.IsAuthenticated && User.HasClaim(nameof(Roles), Roles.Admin))
+        {
+            return RedirectToPage("/AdminPage");
+        }
 
+        return Page();
     }
 }

@@ -1,0 +1,53 @@
+@page
+@model OnlyFarms.WebApp.Pages.AdminPage
+
+@* TODO rendere questa la pagina di default che si apre quando un admin esegue l'accesso *@
+
+@{
+    ViewData["Title"] = "Admin page";
+}
+
+<h1>this is an admin-only page</h1>
+
+@if (Model.UserList.Any())
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>username</th>
+            <th>company name</th>
+            <th>company type</th>
+            <th>status</th>
+            <th>action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        @foreach (var user in Model.UserList)
+        {
+            <tr>
+                <th>@user.UserName</th>
+                <th>@user.CompanyName</th>
+                <th>@user.CompanyType</th>
+                <th>@(user.EmailConfirmed ? "Active" : "Non-Active")</th>
+                <th>
+                    <div class="pull-left">
+                        <form method="post">
+                            <input type="hidden" asp-for="CurrentUser.Id" value="@user.Id"/>
+                            <button asp-page-handler="Submit" class="btn btn-success" type="submit">accept</button>
+                        </form>
+                    </div>
+                </th>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+else
+{
+    <h3>There isn't any new registered user to accept</h3>
+}
+
+    
+

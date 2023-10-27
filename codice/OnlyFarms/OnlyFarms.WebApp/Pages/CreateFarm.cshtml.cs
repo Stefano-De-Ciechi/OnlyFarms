@@ -5,11 +5,12 @@ namespace OnlyFarms.WebApp.Pages
 {
     public class CreateFarmModel : PageModel
     {
-        private DataContext Context { get; }
+        private ICompanyRepository<FarmingCompany> _Repository { get; }
 
-        public CreateFarmModel(DataContext _context)
+        //public CreateFarmModel(DataContext _context)
+        public CreateFarmModel([FromServices] ICompanyRepository<FarmingCompany> repository)
         {
-            this.Context = _context;
+            _Repository = repository;
         }
 
         public FarmingCompany FarmingCompany { get; set; }
@@ -19,10 +20,11 @@ namespace OnlyFarms.WebApp.Pages
 
         }
 
-        public IActionResult OnPostSubmit(FarmingCompany farmingCompany)
+        public async Task<IActionResult> OnPostSubmit(FarmingCompany farmingCompany)
         {
-            this.Context.FarmingCompanies.Add(farmingCompany);
-            this.Context.SaveChanges();
+            //this._Repository.FarmingCompanies.Add(farmingCompany);
+            //this._Repository.SaveChanges();
+            await _Repository.Add(farmingCompany);
             
             return RedirectToPage("./FarmingCompanies");
         }

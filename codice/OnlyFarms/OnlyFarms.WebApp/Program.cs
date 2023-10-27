@@ -12,9 +12,16 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlite(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 */
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+
+/*builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<DataContext>();*/
+
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<DataContext>();
+
+builder.Services.AddIdentityCore<ApplicationUser>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
@@ -122,9 +129,11 @@ async Task AddAdmin()
     var adminUser = new User();     // crea un oggetto che contiene due campi di tipo stringa
     app.Configuration.Bind("Admin", adminUser);     // legge dal file di configurazione (in questo caso user secrets) l'oggetto "Admin" : { "UserName" : "...", "Password" : "..." } e salva i dati letti nell'oggetto adminUser
 
-    var usersManager = services.GetRequiredService<UserManager<IdentityUser>>();         // questa e' una classe creata in automatico da asp.net per gestire gli utenti (probabilmente accede al DB); viene "presa" dal contenitore delle dipendenze; UserManager viene iniettato nelle dipendenze dal metodo builder.Services.AddAuthentication()
-
-    var user = new IdentityUser()
+    //var usersManager = services.GetRequiredService<UserManager<IdentityUser>>();         // questa e' una classe creata in automatico da asp.net per gestire gli utenti (probabilmente accede al DB); viene "presa" dal contenitore delle dipendenze; UserManager viene iniettato nelle dipendenze dal metodo builder.Services.AddAuthentication()
+    var usersManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    
+    //var user = new IdentityUser()
+    var user = new ApplicationUser()
     {
         UserName = adminUser.UserName!,
         EmailConfirmed = true,      // aggiunta altrimenti il login NON funzionava (invalid login credentials error)

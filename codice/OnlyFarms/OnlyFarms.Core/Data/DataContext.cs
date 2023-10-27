@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace OnlyFarms.Core.Data;
 
-public class DataContext : IdentityDbContext<IdentityUser>
+//public class DataContext : IdentityDbContext<IdentityUser>
+public class DataContext : IdentityDbContext<ApplicationUser>
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     { }
