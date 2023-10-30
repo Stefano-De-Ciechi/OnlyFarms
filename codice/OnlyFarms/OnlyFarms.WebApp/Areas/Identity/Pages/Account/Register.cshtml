@@ -27,6 +27,60 @@
                 <label asp-for="Input.ConfirmPassword">Confirm Password</label>
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
             </div>
+            
+            @* ===== Aggiunte ===== *@
+            <hr/>
+            <h4>Company Informations:</h4>
+            
+            <div class="form-floating mb-3">
+                <div class="input-group mb-3">
+                  <label class="input-group-text" asp-for="CompanyType">Company Type</label>
+                  <select asp-for="CompanyType" id="companyTypeSelector" class="form-select" aria-required="true" required>
+                      <option selected value="@CompanyType.FarmingCompany">@CompanyType.FarmingCompany.ToString()</option>
+                      <option value="@CompanyType.WaterCompany">@CompanyType.WaterCompany.ToString()</option>
+                  </select>
+                </div>
+            </div>
+            
+            <div class="form-floating mb-3">
+                <div class="row">
+                    <div class="col">
+                        <label asp-for="WaterCompany.Name">Company Name</label>
+                        <input type="text" class="form-control" asp-for="WaterCompany.Name" aria-required="true" placeholder="company name" required>
+                        <span asp-validation-for="WaterCompany.Name" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-floating mb-3">
+                <div class="row">
+                    <div class="col">
+                        <label asp-for="WaterCompany.Address">Address</label>
+                        <input type="text" class="form-control" asp-for="WaterCompany.Address" aria-required="true" placeholder="Address" required>
+                        <span asp-validation-for="WaterCompany.Address" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-floating mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label asp-for="WaterCompany.City">City</label>
+                        <input type="text" class="form-control" asp-for="WaterCompany.City" aria-required="true" placeholder="City" required>
+                        <span asp-validation-for="WaterCompany.City" class="text-danger"></span>
+                    </div>
+                    
+                    @* il campo WaterSupply del form e' nascosto per le FarmingCompany e ha valore di default = 0 *@
+                    <div id="waterSupplyInput" class="col-md-6" hidden="hidden">
+                        <label asp-for="WaterCompany.WaterSupply">Water Supply</label>
+                        <input type="text" class="form-control" asp-for="WaterCompany.WaterSupply" aria-required="true" placeholder="Water Supply" value="0" required>
+                        <span asp-validation-for="WaterCompany.WaterSupply" class="text-danger"></span>
+                    </div>
+                </div>
+                
+            </div>
+            @* ===== fine aggiunte ===== *@
+            
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </form>
     </div>
@@ -65,3 +119,27 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+
+@* codice javascript per cambiare in modo dinamico alcuni input del form in base al tipo di azienda che si intende registrare *@
+<script>
+    const companyTypeSelector = document.getElementById("companyTypeSelector");
+    const waterSupplyInput = document.getElementById("waterSupplyInput");
+    
+    companyTypeSelector.addEventListener("change", function () {
+        const selectedType = companyTypeSelector.value;
+        
+        switch (selectedType) {
+            case "@CompanyType.FarmingCompany.ToString()":
+                waterSupplyInput.hidden = true;
+                waterSupplyInput.value = '0';
+                break;
+            case "@CompanyType.WaterCompany.ToString()":
+                waterSupplyInput.hidden = false;
+                waterSupplyInput.value = '0';
+                break;
+            default:
+                break;
+        }
+    });
+    
+</script>

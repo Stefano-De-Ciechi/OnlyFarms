@@ -17,6 +17,7 @@ namespace OnlyFarms.WebApp.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class RegisterConfirmationModel : PageModel
     {
+        /* RIMOSSO tutto, NON abbiamo bisogno del codice per la conferma via email (gli account vengono confermati dagli utenti admin
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailSender _sender;
 
@@ -73,6 +74,12 @@ namespace OnlyFarms.WebApp.Areas.Identity.Pages.Account
                     protocol: Request.Scheme);
             }
 
+            return Page();
+        }
+        */
+
+        public IActionResult OnGet()
+        {
             return Page();
         }
     }

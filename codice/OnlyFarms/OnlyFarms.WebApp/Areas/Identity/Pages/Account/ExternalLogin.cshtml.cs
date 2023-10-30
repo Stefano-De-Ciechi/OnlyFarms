@@ -27,22 +27,32 @@ namespace OnlyFarms.WebApp.Areas.Identity.Pages.Account
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
-        private readonly IEmailSender _emailSender;
+        //private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
+        
+        // ===== Aggiunte =====
+        private readonly ICompanyRepository<FarmingCompany> _farmingCompanies;
+
+        private readonly ICompanyRepository<WaterCompany> _waterCompanies;
+        // ===== fine aggiunte =====
 
         public ExternalLoginModel(
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             ILogger<ExternalLoginModel> logger,
-            IEmailSender emailSender)
+            ICompanyRepository<FarmingCompany> farmingCompanies,
+            ICompanyRepository<WaterCompany> waterCompanies)
+            //IEmailSender emailSender)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _logger = logger;
-            _emailSender = emailSender;
+            //_emailSender = emailSender;
+            _farmingCompanies = farmingCompanies;
+            _waterCompanies = waterCompanies;
         }
 
         /// <summary>
@@ -51,6 +61,16 @@ namespace OnlyFarms.WebApp.Areas.Identity.Pages.Account
         /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
+        
+        // ===== Aggiunte =====
+        
+        [BindProperty]
+        public CompanyType CompanyType { get; set; }
+        
+        [BindProperty]
+        public WaterCompany WaterCompany { get; set; }
+        
+        // ===== fine aggiunte =====
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -165,6 +185,9 @@ namespace OnlyFarms.WebApp.Areas.Identity.Pages.Account
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
                         var userId = await _userManager.GetUserIdAsync(user);
+                        ICompany company;
+                        
+                        /* RIMOSSO, la parte di email di conferma non ci interessa, solo un utente admin puo' confermare un account
                         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                         var callbackUrl = Url.Page(
@@ -175,6 +198,34 @@ namespace OnlyFarms.WebApp.Areas.Identity.Pages.Account
 
                         await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                             $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                        */
+                        
+                        switch (CompanyType)
+                        {
+                            case CompanyType.FarmingCompany:
+                                var tmpCompany = new FarmingCompany
+                                {
+                                    Name = WaterCompany.Name,
+                                    City = WaterCompany.City,
+                                    Address = WaterCompany.Address
+                                };
+
+                                company = await _farmingCompanies.Add(tmpCompany);
+                                break;
+                            case CompanyType.WaterCompany:
+                                company = await _waterCompanies.Add(WaterCompany);
+                                break;
+                            default:
+                                return Page();
+                        }
+                        
+                        user.CompanyId = company.Id;
+                        user.CompanyType = CompanyType;
+                        user.CompanyName = company.Name;
+                        
+                        var claimValue = (CompanyType == CompanyType.FarmingCompany)? $"{Roles.FarmManager}" : $"{Roles.WaterManager}";
+                        await _userManager.AddClaimAsync(user, new Claim(nameof(Roles), claimValue));
+                        await _userManager.UpdateAsync(user);
 
                         // If account confirmation is required, we need to show the link if we don't have a real email sender
                         if (_userManager.Options.SignIn.RequireConfirmedAccount)

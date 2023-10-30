@@ -1,8 +1,6 @@
 @page
 @model OnlyFarms.WebApp.Pages.AdminPage
 
-@* TODO rendere questa la pagina di default che si apre quando un admin esegue l'accesso *@
-
 @{
     ViewData["Title"] = "Admin page";
 }
@@ -29,11 +27,11 @@
                 <th>@user.UserName</th>
                 <th>@user.CompanyName</th>
                 <th>@user.CompanyType</th>
-                <th>@(user.EmailConfirmed ? "Active" : "Non-Active")</th>
+                <th>@(user.EmailConfirmed ? "Active" : "Pending")</th>
                 <th>
                     <div class="pull-left">
                         <form method="post">
-                            <input type="hidden" asp-for="CurrentUser.Id" value="@user.Id"/>
+                            <input type="hidden" asp-for="CurrentUser!.Id" value="@user.Id"/>
                             <button asp-page-handler="Submit" class="btn btn-success" type="submit">accept</button>
                         </form>
                     </div>

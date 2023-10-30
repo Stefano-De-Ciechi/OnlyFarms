@@ -20,6 +20,11 @@ public class IndexModel : PageModel
             return RedirectToPage("/AdminPage");
         }
 
+        if (User.Identity != null && User.Identity.IsAuthenticated && User.HasClaim(nameof(Roles), Roles.FarmManager))
+        {
+            return RedirectToPage("/FarmManagerProfile");
+        }
+
         return Page();
     }
 }

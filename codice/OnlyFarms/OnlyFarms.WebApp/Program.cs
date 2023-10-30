@@ -52,6 +52,16 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim(nameof(Roles), Roles.Admin)     // TODO capire quale delle due versioni sia corretta
     );
     
+    options.AddPolicy(Roles.FarmManager, policy =>
+    {
+        policy.RequireClaim(nameof(Roles), Roles.FarmManager);
+    });
+    
+    options.AddPolicy(Roles.WaterManager, policy =>
+    {
+        policy.RequireClaim(nameof(Roles), Roles.WaterManager);
+    });
+    
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
