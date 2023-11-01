@@ -8,6 +8,7 @@ Per far funzionare l'applicazione bisogna impostare gli user-secrets:
 incollare l'oggetto json:
 
 {
+    "JwtSecretKey":"Kro4Q/8z83ZkOGtqZhCurrik7ocDgXifL2qL2scbG6E=",
     "Authentication" :
     {
         "Google" :
