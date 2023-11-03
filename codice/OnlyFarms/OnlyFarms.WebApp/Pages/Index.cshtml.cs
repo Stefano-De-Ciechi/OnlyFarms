@@ -22,7 +22,7 @@ public class IndexModel : PageModel
 
         if (User.Identity != null && User.Identity.IsAuthenticated && User.HasClaim(nameof(Roles), Roles.FarmManager))
         {
-            return RedirectToPage("/FarmManagerProfile");
+            return RedirectToPage("/FarmManager/Profile");
         }
 
         return Page();

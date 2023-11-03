@@ -32,4 +32,22 @@
   <ItemGroup>
     <ProjectReference Include="..\OnlyFarms.Core\OnlyFarms.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\FarmingCompanies\FarmingCompany.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\FarmingCompanies\FarmManagerProfile.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Crops\Create.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Crops\CropComponents\Actuators\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Crops\CropComponents\Sensors\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Crops\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Crops\View.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Pages\FarmManager\Crops\Create.cshtml" />
+    <AdditionalFiles Include="Pages\FarmManager\Crops\CropComponents\Actuators\Index.cshtml" />
+    <AdditionalFiles Include="Pages\FarmManager\Crops\CropComponents\Sensors\Index.cshtml" />
+    <AdditionalFiles Include="Pages\FarmManager\Crops\Index.cshtml" />
+    <AdditionalFiles Include="Pages\FarmManager\Crops\View.cshtml" />
+  </ItemGroup>
 </Project>

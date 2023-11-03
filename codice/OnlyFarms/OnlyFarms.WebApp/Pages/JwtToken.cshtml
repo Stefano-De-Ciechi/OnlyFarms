@@ -7,23 +7,70 @@
 }
 
 <div class="container">
-    <h1> here is your api JWT token: </h1>
+    
+    <h1> your JWT api token: </h1>
+    <h3>30 days validity</h3>
     <div class="row">
         <div class="col-md-12 text-wrap">
             <textarea class="form-control" readonly="true" style="height: 10vw;"> @Model.UserToken?.Value </textarea>
             <br>
-            <button id="copy" onclick="copyToClipboard()"> copy to clipboard </button>
+            <button id="copy1" onclick="copyToClipboard('user')"> copy to clipboard </button>
         </div>
     </div>
-    
-    @* TODO se l'utente e' di tipo FarmManager bisogna anche generare un token per il sottosistema IoT dell'azienda *@
-    
 </div>
 
-<script>
-    // codice JavaScript (eseguito dal client) per copiare il token nella clipboard del dispositivo (copia veloce)
-    function copyToClipboard() {
-        navigator.clipboard.writeText("@Model.UserToken?.Value");
-        document.getElementById("copy").innerText = "copied";
-    }
-</script>
+@if (User.HasClaim(nameof(Roles), Roles.FarmManager))
+{
+    <div class="container mt-5">
+        <h1> your company's IoT Subsystem's JWT api token: </h1>
+        <h3>1 year validity</h3>
+        <div class="row">
+            <div class="col-md-12 text-wrap">
+                <textarea class="form-control" readonly="true" style="height: 10vw;"> @Model.IoTSubsystemToken?.Value </textarea>
+                <br>
+                <button id="copy2" onclick="copyToClipboard('iot')"> copy to clipboard </button>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@*  codice JavaScript (eseguito dal client) per copiare il token nella clipboard del dispositivo (ho dovuto scrivere due versioni
+    in base al tipo di utente per evitare alcuni malfunzionamenti) 
+    
+    a seconda del tipo di utente viene incluso solo uno dei due script nell'html inviato al client
+*@
+
+@if (!User.HasClaim(nameof(Roles), Roles.FarmManager))
+{
+    <script>
+        function copyToClipboard() {
+            navigator.clipboard.writeText("@Model.UserToken?.Value");
+            document.getElementById("copy1").innerText = "copied";
+        }
+    </script>
+}
+else
+{
+    <script>
+        function copyToClipboard(tokenType) {
+            let token = "";
+            
+            if (tokenType === "user") {
+                token = "@Model.UserToken?.Value";
+                document.getElementById("copy1").innerText = "copied";
+                document.getElementById("copy2").innerText = "copy to clipboard";
+            }
+            
+            else if (tokenType === "iot") {
+                token = "@Model.IoTSubsystemToken?.Value";
+                document.getElementById("copy2").innerText = "copied";
+                document.getElementById("copy1").innerText = "copy to clipboard";
+            }
+            
+            navigator.clipboard.writeText(token);
+        }
+    </script>
+}
+
