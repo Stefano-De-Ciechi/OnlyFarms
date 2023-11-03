@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace OnlyFarms.WebApp.Pages;
+namespace OnlyFarms.WebApp.Pages.FarmManager;
 
 [Authorize(Policy = Roles.FarmManager)]
-public class FarmManagerProfile : PageModel
+public class Profile : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ICompanyRepository<FarmingCompany> _companyRepository;
@@ -16,7 +16,7 @@ public class FarmManagerProfile : PageModel
     [BindProperty]
     public FarmingCompany Company { get; set; }
 
-    public FarmManagerProfile(UserManager<ApplicationUser> userManager, ICompanyRepository<FarmingCompany> companyRepository)
+    public Profile(UserManager<ApplicationUser> userManager, ICompanyRepository<FarmingCompany> companyRepository)
     {
         _userManager = userManager;
         _companyRepository = companyRepository;

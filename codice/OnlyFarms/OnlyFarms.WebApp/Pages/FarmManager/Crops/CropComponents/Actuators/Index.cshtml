@@ -1,0 +1,79 @@
+@page "/FarmingCompanies/{farmingCompanyId:int}/Crops/{cropId:int}/Actuators/{actuatorId:int}"
+@model OnlyFarms.WebApp.Pages.FarmManager.Crops.CropComponents.Actuators.Index
+
+@{
+    ViewData["Title"] = "Actuator";
+}
+
+<div class="row" id="box-search">
+    <div class="thumbnail text-center">
+        <img class="img-fluid" src="/img/actuators.jpg" alt="" width="85%">
+        <div class="caption">
+            <h1 style="color: white">@Model.Actuator.Tag</h1>
+        </div>
+    </div>
+</div>
+
+@* Actuator's Commands table *@
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-10">
+            <h1>Commands History</h1>
+        </div>
+        <div class="col">
+            <!-- Button trigger delete modal -->
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                Un-Register
+            </button>
+            
+            <!-- Modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="deleteModalLabel">Are you sure?</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            This will delete the actuator from the database but also all of his commands history!
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <form asp-page-handler="delete" method="post">
+                                <button type="submit" class="btn btn-danger">Un-Register</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    @if (Model.Commands.Any())
+    {
+        @* TODO inserire un selector con opzioni ALL, Last 30 days, Last 7 days, Today per filtrare la quantita' di informazioni *@
+        <table class="table table-dark table-striped mt-4">
+            <thead>
+            <tr>
+                <th scope="col">TIMESTAMP</th>
+                <th scope="col">STATE</th>
+
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var command in Model.Commands)
+            {
+                <tr>
+                    <td>@command.Timestamp</td>
+                    <td>@command.State</td>
+
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <h5 class="text-danger">This actuator has not received any command yet!</h5>
+    }
+</div>

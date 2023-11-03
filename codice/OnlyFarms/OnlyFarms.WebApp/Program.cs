@@ -34,6 +34,7 @@ builder.Services.AddAuthentication().AddGoogle(googleOptions =>
     googleOptions.ClientSecret = configuration["Authentication:Google:ClientSecret"]!;
 });
 
+// TODO ha senso dare all'admin accesso anche alle pagine riservate a FarmManager e WaterManager?
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(Roles.Admin, policy =>

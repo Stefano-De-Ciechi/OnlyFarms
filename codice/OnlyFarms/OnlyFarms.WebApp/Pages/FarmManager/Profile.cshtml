@@ -1,13 +1,15 @@
 @page
-@model OnlyFarms.WebApp.Pages.FarmManagerProfile
+@model OnlyFarms.WebApp.Pages.FarmManager.Profile
 
 @{
     
 }
 
+@* TODO ha senso implementare la modifica delle informazioni? e' difficile che cambino*@
+
 <div class="row" id="box-search">
     <div class="thumbnail text-center">
-        <img class="img-fluid" src="img/stripe.jpeg" alt="">
+        <img class="img-fluid" src="/img/stripe.jpeg" alt="">
         <div class="caption">
             <h1 style="color: white">@Model.Company.Name</h1>
         </div>
@@ -15,7 +17,7 @@
 </div>
 
 <div class="container mt-4">
-    <h4>Your Company:</h4>
+    <h1>Company Informations:</h1>
     
     <dl class="row">
         <dt class="col-sm-2">Name</dt>
@@ -27,7 +29,7 @@
         <dt class="col-sm-2">Address</dt>
         <dd class="col-sm-10">@Model.Company.Address</dd>
         
-        <dt class="col-sm-2">Crops count</dt>
-        <dd class="col-sm-10">@Model.Company.Crops.Count()</dd>
+        <dt class="col-sm-2">Total Water Needs</dt>
+        <dd class="col-sm-10">@Model.Company.WaterSupply</dd>
     </dl>
 </div>

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace OnlyFarms.WebApp.Areas.Tokens.Pages;
+namespace OnlyFarms.WebApp.Pages;
 
 [Authorize]     // e' sufficiente un utente autorizzato per accedere a questa pagina (Admin, FarmManager o WaterManager)
 public class JwtToken : PageModel
@@ -11,6 +11,7 @@ public class JwtToken : PageModel
     
     [BindProperty]
     public Token UserToken { get; set; }
+    public Token IoTSubsystemToken { get; set; }
 
     public JwtToken(ITokenRepository tokenRepository)
     {
@@ -20,12 +21,10 @@ public class JwtToken : PageModel
     public void OnGet(int days = 30)
     {
         UserToken = _tokenRepository.GenerateUserToken(days);
-        // TODO accedere al tipo di utente, se e' un FarmManager bisogna anche generare un token per il sottosistema IoT
-        /* qualcosa del tipo
-        if (user.HasClaim(nameof(Roles), Roles.FarmManager))
+        
+        if (User.HasClaim(nameof(Roles), Roles.FarmManager))
         {
-            IoTSubsystemToken = _tokenRepository.GenerateIotSubsystemToken      
+            IoTSubsystemToken = _tokenRepository.GenerateIotSubsystemToken();
         }
-         */
     }
 }

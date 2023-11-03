@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
@@ -38,7 +39,27 @@ public class TokenRepository : ITokenRepository
 
     public Token GenerateIotSubsystemToken()
     {
-        // TODO manca implementazione generazione token Sottosistema IoT (con validita' illimitata)
-        throw new NotImplementedException();
+        var user = _httpContextAccessor.HttpContext?.User ?? throw new NullReferenceException("Missing User");
+
+        if (!user.HasClaim(nameof(Roles), Roles.FarmManager))
+        {
+            throw new UnauthorizedAccessException("you must be a FarmManager to generate a JWT token for an IoT subsystem");
+        }
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSecretKey"]!));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        
+        var token = new JwtSecurityToken(
+            claims: new []{ new Claim(nameof(Roles), Roles.IoTSubSystem) },
+            expires: DateTime.Now.AddYears(1),      // validita' un anno
+            signingCredentials: credentials
+        );
+
+        return new Token()
+        {
+            Value = new JwtSecurityTokenHandler().WriteToken(token),
+            ValidFrom = token.ValidFrom,
+            ValidTo = token.ValidTo
+        };
     }
 }
