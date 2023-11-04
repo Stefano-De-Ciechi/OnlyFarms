@@ -1,15 +1,13 @@
 @page
-@model OnlyFarms.WebApp.Pages.FarmManager.Profile
+@model OnlyFarms.WebApp.Pages.WaterManager.Profile
 
 @{
-    
+    ViewData["Title"] = "Profile";
 }
-
-@* TODO ha senso implementare la modifica delle informazioni? e' difficile che cambino*@
 
 <div class="row" id="box-search">
     <div class="thumbnail text-center">
-        <img class="img-fluid" src="/img/stripe.jpeg" alt="">
+        <img class="img-fluid" src="/img/irrigation.jpeg" alt="">
         <div class="caption">
             <h1 style="color: white">@Model.Company.Name</h1>
         </div>
@@ -29,7 +27,10 @@
         <dt class="col-sm-2">Address</dt>
         <dd class="col-sm-10">@Model.Company.Address</dd>
         
-        <dt class="col-sm-2">Total Water Needs</dt>
+        <dt class="col-sm-2">Current Water Supply</dt>
         <dd class="col-sm-10">@Model.Company.WaterSupply liters</dd>
+        
+        <dt class="col-sm-2">Current Global Water Limit</dt>
+        <dd class="col-sm-10">@Model.Company.GlobalWaterLimit liters</dd>
     </dl>
 </div>

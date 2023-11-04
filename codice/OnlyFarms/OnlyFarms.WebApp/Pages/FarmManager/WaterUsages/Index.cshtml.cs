@@ -6,8 +6,7 @@ public class Index : PageModel
 {
     private readonly IWaterUsageRepository _waterUsages;
 
-    //IEnumerable<WaterUsage> WaterUsages { get; set; }
-    public IAsyncEnumerable<WaterUsage> WaterUsages { get; set; }
+    public IEnumerable<WaterUsage> WaterUsages { get; set; }
 
     public Index(IWaterUsageRepository waterUsages)
     {
@@ -16,6 +15,6 @@ public class Index : PageModel
 
     public void OnGet(int farmingCompanyId)
     {
-        WaterUsages = _waterUsages.GetAll(farmingCompanyId);
+        WaterUsages = _waterUsages.GetAll(farmingCompanyId).ToBlockingEnumerable();
     }
 }

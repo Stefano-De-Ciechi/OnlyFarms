@@ -48,11 +48,24 @@
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="">Water Reservations</a>
+                                <a class="nav-link text-dark" asp-area="" asp-page="/FarmManager/Reservations/Index">Water Reservations</a>
                             </li>
                         }
                         
-                        @* TODO inserire i menu per utente WaterManager *@
+                        @if (User.HasClaim(nameof(Roles), Roles.WaterManager))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/WaterManager/Profile">Company |</a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/WaterManager/Profile">Reservations |</a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/WaterManager/Profile">Water Limits</a>
+                            </li>
+                        }
 
                     </ul>
                     <partial name="_LoginPartial" />
