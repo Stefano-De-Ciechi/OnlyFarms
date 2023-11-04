@@ -15,11 +15,16 @@ public class ReservationRepository : IReservationRepository
         _waterCompanies = waterCompanies;
     }
 
-    public async IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId)
+    public async IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId)
     {
         var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
-        var waterCompany = await _waterCompanies.Get(waterCompanyId);
-        foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.WaterCompanyId == waterCompany.Id)) yield return r;
+        foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id)) yield return r;
+    }
+
+    public async IAsyncEnumerable<Reservation> GetReservation(int farmingCompanyId)
+    {
+        var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
+        foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.OnGoing == true)) yield return r;
     }
 
     public async IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId, DateTime? between, DateTime? and)

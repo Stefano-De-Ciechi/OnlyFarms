@@ -1,0 +1,62 @@
+package application.gestoreIoT;
+
+import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.json.JSONObject;
+
+public class GestoreIoT {
+	
+	private String broker = "tcp://localhost:1883";
+	private String dataTopic = "sensors/data";
+	private String commandTopic = "actuators/command";
+	
+	private MqttClient client = new MqttClient(this.broker, MqttClient.generateClientId(), new MemoryPersistence());;
+	
+	public GestoreIoT() throws MqttException{
+		client.connect();
+	}
+	
+	
+	public void receiveMessage(String dataTopic) throws MqttException{
+        client.subscribe(dataTopic, new IMqttMessageListener() {
+			@Override
+			public void messageArrived(String topic, MqttMessage message) throws Exception {
+			    String data = new String(message.getPayload());
+			    System.out.println("Received sensor data: " + data);
+			    
+			    
+			    try {
+			    	JSONObject jsonData = new JSONObject
+			    }catch(Exception e) {
+			    	e.printStackTrace();
+			    }
+			}
+		});
+        
+        
+	}
+	
+	public void sendCommand(String commandTopic) throws MqttException{
+        String command = "Activate";
+        
+        MqttMessage mqttMessage = new MqttMessage(command.getBytes());
+        mqttMessage.setQos(0);
+        
+        client.publish(commandTopic, mqttMessage);
+	}
+
+	 public static void main(String[] args) throws MqttException {
+		 GestoreIoT gIT = new GestoreIoT();
+		 String dataTopic = "sensors/data";
+		 String commandTopic = "actuators/command";
+		 
+		 
+		 gIT.receiveMessage(dataTopic);
+		 gIT.sendCommand(commandTopic);
+	
+	 }
+
+}

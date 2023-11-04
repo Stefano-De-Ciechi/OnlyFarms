@@ -1,0 +1,15 @@
+{
+    "Mattina": {
+        "Temperatura": 18,
+        "Umidità": 70
+    },
+    "Pomeriggio": {
+        "Temperatura": 25,
+        "Umidità": 50
+    },
+    "Sera": {
+        "Temperatura": 15,
+        "Umidità": 40,
+        "Acqua rimanente": 300
+    }
+}
