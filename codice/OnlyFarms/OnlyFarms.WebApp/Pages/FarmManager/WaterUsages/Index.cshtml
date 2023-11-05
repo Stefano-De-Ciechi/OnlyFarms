@@ -5,17 +5,32 @@
     ViewData["Title"] = "Water Usages";
 }
 
+@* questa pagina e' accessibile da entrambi i tipi di utente (FarmManager e WaterManager) ed alcuni dei suoi
+   contenuti cambiano in base a chi la sta visitando attualmente *@
+
 <div class="row" id="box-search">
     <div class="thumbnail text-center">
         <img class="img-fluid" src="/img/waterUsage.jpg" alt="" width="85%">
         <div class="caption">
-            <h1 style="color: white">YOUR WATER USAGES</h1>
+            @if (User.HasClaim(nameof(Roles), Roles.FarmManager))
+            {
+                <h1 style="color: white">YOUR WATER USAGES</h1>
+            }
+            else
+            {
+                <h1 style="color: white">@Model.CompanyName's<br/> WATER USAGES</h1>
+            }
         </div>
     </div>
 </div>
 
+@* TODO aggiungere un filtro sul periodo delle date *@
 <div class="container mt-4">
-    <h5>This page should be updated automatically by your IoT Subsystem</h5>
+    @if (User.HasClaim(nameof(Roles), Roles.FarmManager))
+    {
+        <h5>This page should be updated automatically by your IoT Subsystem</h5>
+    }
+    
     @if (Model.WaterUsages.Any())
     {
         <table class="table table-dark table-striped">
@@ -39,6 +54,9 @@
     }
     else
     {
-        <h5 class="text-danger">Your IoT Subsystem hasn't registered any water usage yet!</h5>
+        @if (User.HasClaim(nameof(Roles), Roles.FarmManager))
+        {
+            <h5 class="text-danger">Your IoT Subsystem hasn't registered any water usage yet!</h5>
+        }
     }
 </div>

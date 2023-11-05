@@ -27,6 +27,11 @@ public class IndexModel : PageModel
             return RedirectToPage("/FarmManager/Profile");
         }
 
+        if (User.Identity != null && User.Identity.IsAuthenticated && User.HasClaim(nameof(Roles), Roles.WaterManager))
+        {
+            return RedirectToPage("/WaterManager/Profile");
+        }
+
         return Page();
     }
 }

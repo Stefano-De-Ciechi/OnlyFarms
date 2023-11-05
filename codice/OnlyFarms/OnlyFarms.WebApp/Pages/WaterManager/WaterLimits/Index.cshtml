@@ -1,0 +1,118 @@
+@page "/WaterCompanies/{waterCompanyId:int}/WaterLimits"
+@model OnlyFarms.WebApp.Pages.WaterManager.WaterLimits.Index
+
+@{
+    ViewData["Title"] = "WaterLimits";
+}
+
+<div class="row" id="box-search">
+    <div class="thumbnail text-center">
+        <img class="img-fluid" src="/img/waterLimit.jpg" alt="">
+        <div class="caption">
+            <h1 style="color: white">Water Limits</h1>
+        </div>
+    </div>
+</div>
+
+@*
+@foreach (var waterLimit in Model.WaterLimits)
+{
+    <ul>@waterLimit.FarmingCompany.Name - @waterLimit.Limit</ul>
+}*@
+
+@if (Model.WaterLimits.Any())
+{
+    <table class="table mt-4">
+        <thead>
+        <tr>
+            <th>company name</th>
+            <th>company city</th>
+            <th>company address</th>
+            <th>limit</th>
+            <th>action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        @foreach (var limit in Model.WaterLimits)
+        {
+            var farmingCompany = limit.FarmingCompany;
+            <tr>
+                <th>
+                    <a asp-area="" asp-page="/FarmManager/WaterUsages/Index" asp-route-farmingCompanyId="@farmingCompany.Id" asp-route-companyName="@farmingCompany.Name">
+                        @farmingCompany.Name
+                    </a>
+                </th>
+                <th>@farmingCompany.City</th>
+                <th>@farmingCompany.Address</th>
+                <th>@limit.Limit liters</th>
+                <th>
+                    <div class="pull-left">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#limitUpdateModal" data-limitId="@limit.Id" data-oldLimit="@limit.Limit">
+                            Update
+                        </button>
+                    </div>
+                </th>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+else
+{
+    <h3 class="text-danger">There are no water limits set for any of your companies</h3>
+}
+
+<div class="modal fade" id="limitUpdateModal" tabindex="-1" aria-labelledby="limitUpdateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="limitUpdateModalLabel">Change water limit</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-page-handler="limitUpdate" method="post" asp-route-waterCompanyId="@Model.WaterLimits.FirstOrDefault()?.WaterCompanyId">
+                <div class="modal-body">
+                    
+                    <input type="hidden" id="modalLimitId" asp-for="LimitId">   @* value viene settata in maniera dinamica a seconda del bottone che si preme *@
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Old Limit</span>
+                        <input type="text" class="form-control" id="modalOldLimitValue" readonly>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">New Limit</span>
+                        <input type="number" min="0" step="50"  id="modalNewLimitValue" class="form-control" asp-for="NewLimitValue" required>
+                        <span class="text-danger" asp-validation-for="NewLimitValue"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    @* questo script serve a modificare in maniera dinamica i valori passati al form di update per ogni singola azienda in base al bottone premuto
+       cosi' e' possibile avere un unico modal per tutti gli utenti, invece che avere un modal per utente (duplicazione eccessiva di codice html) *@
+    
+    const modal = document.getElementById('limitUpdateModal');
+    const modalLimitId = document.getElementById('modalLimitId');
+    const modalOldLimitValue = document.getElementById('modalOldLimitValue');
+    const modalNewLimitValue = document.getElementById('modalNewLimitValue');
+
+    document.addEventListener('click', function (event) {
+        if (event.target && event.target.getAttribute('data-bs-toggle') === 'modal') {
+            
+            const limitId = event.target.getAttribute('data-limitId');
+            const oldLimitValue = event.target.getAttribute('data-oldLimit');
+            
+            modalLimitId.value = limitId;
+            modalOldLimitValue.value = oldLimitValue;
+            modalNewLimitValue.value = oldLimitValue;       // inizialmente hanno lo stesso valore, e si puo' decidere di quanto incrementarlo-decrementarlo
+        }
+    });
+</script>
