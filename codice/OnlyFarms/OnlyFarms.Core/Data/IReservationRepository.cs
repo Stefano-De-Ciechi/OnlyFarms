@@ -3,7 +3,8 @@ namespace OnlyFarms.Core.Data;
 public interface IReservationRepository
 {
     IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId);
-    IAsyncEnumerable<Reservation> GetReservation(int farmingCompanyId);
+    //IAsyncEnumerable<Reservation> GetReservation(int farmingCompanyId);
+    Task<Reservation?> GetCurrentReservation(int farmingCompanyId);
     IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId, DateTime? between, DateTime? and);
     Task<Reservation> Get(int farmingCompanyId, int waterCompanyId, int id);
     Task<Reservation> Add(int farmingCompanyId, int waterCompanyId, Reservation reservation);

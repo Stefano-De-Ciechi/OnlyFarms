@@ -505,7 +505,7 @@ void MapReservationsRoutes()
             return Results.Ok(repository.GetAll(farmingCompanyId, waterCompanyId, between, and));
         }
         
-        var res = repository.GetAll(farmingCompanyId, waterCompanyId);
+        var res = repository.GetAll(farmingCompanyId);
         return Results.Ok(res);
     })
         .RequireAuthorization(Policy.IsAuthenticated)

@@ -21,10 +21,16 @@ public class ReservationRepository : IReservationRepository
         foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id)) yield return r;
     }
 
-    public async IAsyncEnumerable<Reservation> GetReservation(int farmingCompanyId)
+    /*public async IAsyncEnumerable<Reservation> GetReservation(int farmingCompanyId)
     {
         var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
         foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.OnGoing == true)) yield return r;
+    }*/
+
+    public async Task<Reservation?> GetCurrentReservation(int farmingCompanyId)
+    {
+        var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
+        return await _reservations.FirstOrDefaultAsync(r => r.FarmingCompanyId == farmingCompany.Id && r.OnGoing == true);
     }
 
     public async IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId, DateTime? between, DateTime? and)
