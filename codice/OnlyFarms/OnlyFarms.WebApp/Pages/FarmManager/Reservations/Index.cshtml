@@ -1,8 +1,10 @@
 @page "/FarmingCompanies/{farmingCompanyId:int}/Reservations"
 @model OnlyFarms.WebApp.Pages.FarmManager.Reservations.Index
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Reservations";
+    var user = await UserManager.GetUserAsync(User);
 }
 
 @*
@@ -31,6 +33,7 @@
                     <th scope="col">BOOKED QUANTITY </th>
                     <th scope="col">PRICE</th>
                     <th scope="col">TIME STAMP</th>
+                    <th scope="col">WATER COMPANY</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,6 +44,7 @@
                         <td>@reservation.BookedQuantity</td>
                         <td>@reservation.Price</td>
                         <td>@reservation.Timestamp</td>
+                        <td>@reservation.WaterCompanyId</td>
                     </tr>
                 }
             </tbody>
@@ -84,9 +88,12 @@
     {
         <h5 class="text-danger">You haven't registered to any water company yet!</h5>
     }
+
 </div>
 
 
-<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#actuatorModal" asp-page="Reservation">
+<a type="button" class="btn btn-success" href="/FarmingCompanies/@user.CompanyId/Reservations/Reservation">
     Register Now
-</button>
+</a>
+
+
