@@ -1,0 +1,41 @@
+﻿@page "/WaterCompany/{id}"
+@model OnlyFarms.WebApp.Pages.WaterManager.ManagmentModel
+@{
+}
+
+@if (Model.ReservationsList.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Booked QTY</th>
+                <th>Company ID</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var res in Model.ReservationsList)
+            {
+                <tr>
+                    <th>@res.BookedQuantity</th>
+                    <th>@res.FarmingCompanyId</th>
+                    <th>@res.Price</th>
+                    <th>@(res.Accepted? "Active" : "Pending")</th>
+                    <th>
+                        <div class="pull-left">
+                            <form method="post">
+                                <button asp-page-handler="Submit" class="btn btn-success" type="submit" asp-route-reservationId="@res.Id">accept</button>
+                            </form>
+                        </div>
+                    </th>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+else
+{
+    <h3>There isn't any new registered user to accept</h3>
+}

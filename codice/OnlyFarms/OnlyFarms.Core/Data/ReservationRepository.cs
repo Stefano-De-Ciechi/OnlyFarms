@@ -33,6 +33,12 @@ public class ReservationRepository : IReservationRepository
         return await _reservations.FirstOrDefaultAsync(r => r.FarmingCompanyId == farmingCompany.Id && r.OnGoing == true);
     }
 
+    public async Task<Reservation?> GetById(int reservationId)
+    {
+        return await _reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.Accepted == false);
+        
+    }
+
     public async IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId, DateTime? between, DateTime? and)
     {
         and ??= DateTime.Now;
