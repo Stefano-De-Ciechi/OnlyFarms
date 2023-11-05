@@ -13,11 +13,12 @@ namespace OnlyFarms.WebApp.Pages.FarmManager.Reservations
     {
         readonly ICompanyRepository<WaterCompany> _companyRespository;
         private DataContext Context { get; }
+        private IReservationRepository _reservationRepository;
 
-        public ReservationModel(ICompanyRepository<WaterCompany> companyRespository, DataContext _context)
+        public ReservationModel(ICompanyRepository<WaterCompany> companyRespository,IReservationRepository reservationRepository )
         {
             _companyRespository = companyRespository;
-            this.Context = _context;
+            _reservationRepository = reservationRepository;
         }
 
         public IAsyncEnumerable<ICompany>? Companies { get; set; }
@@ -31,8 +32,7 @@ namespace OnlyFarms.WebApp.Pages.FarmManager.Reservations
 
         public IActionResult OnPostResult(Reservation reservation)
         {
-            this.Context.Reservations.Add(reservation);
-            this.Context.SaveChanges();
+            _reservationRepository.Add(reservation.FarmingCompanyId, reservation.WaterCompanyId, reservation);
             return RedirectToPage("./Index");
         }
     }

@@ -27,6 +27,12 @@ public class ReservationRepository : IReservationRepository
         foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.OnGoing == true)) yield return r;
     }
 
+    public async Task<Reservation?> GetById(int reservationId)
+    {
+        return await _reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.Accepted == false);
+        
+    }
+
     public async IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId, DateTime? between, DateTime? and)
     {
         and ??= DateTime.Now;
