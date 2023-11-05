@@ -1,0 +1,39 @@
+﻿@page "/FarmingCompanies/{farmingCompanyId:int}/Reservations/Reservation/{waterCompanyId:int}"
+@model OnlyFarms.WebApp.Pages.FarmManager.Reservations.ReservationIdModel
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var user = await UserManager.GetUserAsync(User);
+
+}
+
+<div class="row" id="box-search">
+    <div class="thumbnail text-center">
+        <img class="img-fluid" src="/img/waterUsage.jpg" alt="" width="85%">
+        <div class="caption">
+            <h1 style="color: white">RESERVATION</h1>
+        </div>
+    </div>
+</div>
+
+<br />
+<form method="post">
+    <div class="form-row">
+        <div class="col-md-4 mb-3" style="text-align:center">
+            <label asp-for="Reservation.BookedQuantity"> QUANTITY</label>
+            <input type="text" class="form-control" asp-for="Reservation.BookedQuantity" placeholder="Quantity" value="" required>
+            <span asp-validation-for="Reservation.BookedQuantity" class="text-danger"></span>
+        </div>
+        <div class="col-md-4 mb-3" style="text-align:center">
+            <label asp-for="Reservation.Price">PRICE</label>
+            <input type="text" class="form-control" asp-for="Reservation.Price" placeholder="Price" value="" required>
+            <span asp-validation-for="Reservation.Price" class="text-danger"></span>
+        </div>
+        @if (TempData.ContainsKey("ErrorMessage"))
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+        <button class="btn btn-danger" type="submit" asp-page-handler="Submit">ADD</button>
+    </div>
+</form>
