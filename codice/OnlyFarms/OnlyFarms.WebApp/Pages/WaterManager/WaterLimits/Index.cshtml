@@ -5,20 +5,16 @@
     ViewData["Title"] = "WaterLimits";
 }
 
+@* TODO aggiungere modifica del limite di acqua globale *@
+
 <div class="row" id="box-search">
     <div class="thumbnail text-center">
         <img class="img-fluid" src="/img/waterLimit.jpg" alt="">
         <div class="caption">
-            <h1 style="color: white">Water Limits</h1>
+            <h1 style="color: white">WATER LIMITS</h1>
         </div>
     </div>
 </div>
-
-@*
-@foreach (var waterLimit in Model.WaterLimits)
-{
-    <ul>@waterLimit.FarmingCompany.Name - @waterLimit.Limit</ul>
-}*@
 
 @if (Model.WaterLimits.Any())
 {

@@ -21,16 +21,10 @@ public class ReservationRepository : IReservationRepository
         foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id)) yield return r;
     }
 
-    /*public async IAsyncEnumerable<Reservation> GetReservation(int farmingCompanyId)
+    public async IAsyncEnumerable<Reservation> GetCurrentReservations(int farmingCompanyId)
     {
         var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
         foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.OnGoing == true)) yield return r;
-    }*/
-
-    public async Task<Reservation?> GetCurrentReservation(int farmingCompanyId)
-    {
-        var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
-        return await _reservations.FirstOrDefaultAsync(r => r.FarmingCompanyId == farmingCompany.Id && r.OnGoing == true);
     }
 
     public async Task<Reservation?> GetById(int reservationId)
@@ -48,6 +42,12 @@ public class ReservationRepository : IReservationRepository
         foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.WaterCompanyId == waterCompany.Id && r.Timestamp >= between && r.Timestamp <= and)) yield return r;
     }
 
+    public async IAsyncEnumerable<Reservation> GetAllByWaterCompany(int waterCompanyId)
+    {
+        var waterCompany = await _waterCompanies.Get(waterCompanyId);
+        foreach (var r in _reservations.Where(r => r.WaterCompanyId == waterCompany.Id)) yield return r;
+    }
+
     public async Task<Reservation> Get(int farmingCompanyId, int waterCompanyId, int id)
     {
         var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
@@ -63,18 +63,12 @@ public class ReservationRepository : IReservationRepository
     }
 
     public async Task<Reservation> Add(int farmingCompanyId, int waterCompanyId, Reservation reservation)
-    {
-        var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
-        var waterCompany = await _waterCompanies.Get(waterCompanyId);
+    { 
+        await _farmingCompanies.Get(farmingCompanyId); 
+        await _waterCompanies.Get(waterCompanyId);
         
-        var previous = await _reservations.FirstOrDefaultAsync(r => r.OnGoing && r.FarmingCompanyId == farmingCompany.Id && r.WaterCompanyId == waterCompany.Id);
-        if (previous != null)
-        {
-            previous.OnGoing = false;   // se si trova una prenotazione attiva viene resa inattiva
-        }
-
-        // TODO rivedere sta parte se si decide di aggiungere il campo Confirmed alle Reservations (dopo la POST di un' azienda agricola deve essere confermata dall' azienda idrica per diventare attiva e rimpiazzare la Reservation precedente)
-        reservation.OnGoing = true;
+        reservation.OnGoing = false;
+        reservation.Accepted = false;
         reservation.FarmingCompanyId = farmingCompanyId;
         reservation.WaterCompanyId = waterCompanyId;
         
@@ -82,6 +76,32 @@ public class ReservationRepository : IReservationRepository
         await _context.SaveChangesAsync();
 
         return reservation;
+    }
+
+    public async Task<Reservation> AcceptReservation(int reservationId)
+    {
+        var toAccept = await GetById(reservationId);
+        if (toAccept == null)
+        {
+            throw new NotFoundException<Reservation>(reservationId);
+        }
+
+        // cerca la precedente prenotazione (se presente) e ne modifica il flag OnGoing a false
+        var previous = await _reservations.FirstOrDefaultAsync(r => r.OnGoing == true && r.Accepted == true && r.FarmingCompanyId == toAccept.FarmingCompanyId && r.WaterCompanyId == toAccept.WaterCompanyId);
+        if (previous != null)
+        {
+            previous.OnGoing = false;
+            _reservations.Entry(previous).CurrentValues.SetValues(previous);
+        }
+
+        toAccept.Accepted = true;
+        toAccept.OnGoing = true;
+        toAccept.Timestamp = DateTime.Now;      // il timestamp prendere il valore di inizio validita'
+        
+        _reservations.Entry(toAccept).CurrentValues.SetValues(toAccept);
+        await _context.SaveChangesAsync();
+
+        return toAccept;
     }
 
     public async Task<Reservation> Update(int farmingCompanyId, int waterCompanyId, int id, Reservation updatedReservation)

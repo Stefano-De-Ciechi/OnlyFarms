@@ -8,11 +8,11 @@
 
 <div class="container">
     
-    <h1> your JWT api token: </h1>
+    <h1> your JWT api token:</h1>
     <h3>30 days validity</h3>
     <div class="row">
         <div class="col-md-12 text-wrap">
-            <textarea class="form-control" readonly="true" style="height: 10vw;"> @Model.UserToken?.Value </textarea>
+            <textarea class="form-control" readonly style="height: 10vw;"> @Model.UserToken?.Value </textarea>
             <br>
             <button id="copy1" onclick="copyToClipboard('user')"> copy to clipboard </button>
         </div>
@@ -22,11 +22,11 @@
 @if (User.HasClaim(nameof(Roles), Roles.FarmManager))
 {
     <div class="container mt-5">
-        <h1> your company's IoT Subsystem's JWT api token: </h1>
+        <h1> your company's IoT Subsystem's JWT api token:</h1>
         <h3>1 year validity</h3>
         <div class="row">
             <div class="col-md-12 text-wrap">
-                <textarea class="form-control" readonly="true" style="height: 10vw;"> @Model.IoTSubsystemToken?.Value </textarea>
+                <textarea class="form-control" readonly style="height: 10vw;"> @Model.IoTSubsystemToken?.Value </textarea>
                 <br>
                 <button id="copy2" onclick="copyToClipboard('iot')"> copy to clipboard </button>
             </div>

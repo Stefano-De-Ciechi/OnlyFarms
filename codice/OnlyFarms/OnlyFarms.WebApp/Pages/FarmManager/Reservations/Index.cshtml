@@ -17,27 +17,31 @@
 </div>
 
 <div class="container mt-4">
-    <h3 class="text"> Current Reservation </h3>
-    @if (Model.CurrentReservation != null)
+    <h3 class="text">ACTIVE</h3>
+    @if (Model.CurrentReservations.Any())
     {
         <table class="table table-dark table-striped">
             <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">BOOKED QUANTITY </th>
-                    <th scope="col">PRICE</th>
-                    <th scope="col">STARTED</th>
-                    <th scope="col">WATER COMPANY</th>
-                </tr>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">BOOKED QUANTITY</th>
+                <th scope="col">PRICE</th>
+                <th scope="col">STARTED</th>
+                <th scope="col">WATER COMPANY</th>
+            </tr>
             </thead>
             <tbody>
+            @foreach (var reservation in Model.CurrentReservations)
+            {
                 <tr>
-                    <td>@Model.CurrentReservation.Id</td>
-                    <td>@Model.CurrentReservation.BookedQuantity</td>
-                    <td>@Model.CurrentReservation.Price</td>
-                    <td>@Model.CurrentReservation.Timestamp.ToString("dd/MM/yyyy")</td>
-                    <td>@Model.CurrentReservation.WaterCompanyId</td>
+                    <td>@reservation.Id</td>
+                    <td>@reservation.BookedQuantity</td>
+                    <td>@reservation.Price</td>
+                    <td>@reservation.Timestamp.ToString("dd/MM/yyyy")</td>
+                    <td>@reservation.WaterCompanyId</td>
+                    @* TODO aggiungere un modo per annullare una prenotazione *@
                 </tr>
+            }
             </tbody>
         </table>
     }
@@ -46,26 +50,56 @@
         <h5 class="text-danger">You don't have any active reservation yet!</h5>
     }
     
-    @*<a type="button" class="btn btn-success" href="/FarmingCompanies/@user!.CompanyId/Reservations/Reservation">
-        Request new Reservation
-    </a>*@
-    
     <a type="button" class="btn btn-success" asp-page="/FarmManager/Reservations/Reservation" asp-route-farmingCompanyId="@user!.CompanyId">
-            Request new Reservation
+        Request new Reservation
     </a>
     
 </div>
 
+<div class="container mt-5">
+    <h3 class="text">PENDING</h3>
+    @if (Model.PendingReservations.Any())
+    {
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">BOOKED QUANTITY</th>
+                    <th scope="col">PRICE</th>
+                    <th scope="col">WATER COMPANY</th>
+                    <th scope="col">STATE</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reservation in Model.PendingReservations)
+                {
+                    <tr>
+                        <td>@reservation.Id</td>
+                        <td>@reservation.BookedQuantity</td>
+                        <td>@reservation.Price</td>
+                        <td>@reservation.WaterCompanyId</td>
+                        <td>PENDING</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <h5 class="text-danger">You have no pending reservations for now</h5>
+    }
+
+</div>
 
 <div class="container mt-5">
-    <h3 class="text"> Reservations History </h3>
+    <h3 class="text">HISTORY</h3>
     @if (Model.PastReservations.Any())
     {
         <table class="table table-dark table-striped">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
-                    <th scope="col">BOOKED QUANTITY </th>
+                    <th scope="col">BOOKED QUANTITY</th>
                     <th scope="col">PRICE</th>
                     <th scope="col">STARTED</th>
                     <th scope="col">WATER COMPANY</th>

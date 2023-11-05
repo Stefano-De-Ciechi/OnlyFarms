@@ -1,48 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using NuGet.Protocol.Core.Types;
-using OnlyFarms.Core.Models;
-using OnlyFarms.WebApp.Pages;
 
 namespace OnlyFarms.WebApp.Pages.FarmManager.Reservations
 {
 	public class ReservationIdModel : PageModel
     {
-        readonly ICompanyRepository<WaterCompany> _companyRespository;
-        private IReservationRepository _Repository { get; }
+        private readonly ICompanyRepository<WaterCompany> _companies;
+        private readonly IReservationRepository _reservations;
+        
+        [BindProperty]
         public Reservation Reservation { get; set; }
         
-
-
-        public ReservationIdModel([FromServices] IReservationRepository repository, ICompanyRepository<WaterCompany> companyRespository)
+        public ReservationIdModel(ICompanyRepository<WaterCompany> companies, IReservationRepository reservations)
         {
-            _Repository = repository;
-            _companyRespository = companyRespository;
+            _companies = companies;
+            _reservations = reservations;
         }
-
-
-        public async void OnGet()
+        
+        public void OnGet()
         {
             
         }
 
-        public async Task<IActionResult> OnPostAsync(int farmingCompanyId, int waterCompanyId, Reservation reservation)
+        public async Task<IActionResult> OnPostAsync(int farmingCompanyId, int waterCompanyId)
         {
-            WaterCompany result = _companyRespository.Get(waterCompanyId).Result;
+            var result = _companies.Get(waterCompanyId).Result;
             
-            if (!ModelState.IsValid || reservation.BookedQuantity > result.WaterSupply)
+            if (!ModelState.IsValid || Reservation.BookedQuantity > result.WaterSupply)
             {
                 TempData["ErrorMessage"] = "Quantity of water inserted is not available for this water company";
                 return Page();
             }
 
-            await _Repository.Add(farmingCompanyId, waterCompanyId, reservation);
-            return RedirectToPage("/FarmManager/Profile");
+            await _reservations.Add(farmingCompanyId, waterCompanyId, Reservation);
+            return RedirectToPage("/FarmManager/Reservations/Index", new { farmingCompanyId });
         }
     }
 }

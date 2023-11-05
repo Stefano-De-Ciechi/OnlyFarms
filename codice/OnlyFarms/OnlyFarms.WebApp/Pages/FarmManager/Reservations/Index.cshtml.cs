@@ -7,31 +7,35 @@ namespace OnlyFarms.WebApp.Pages.FarmManager.Reservations;
 [Authorize(Policy = Roles.FarmManager)]
 public class Index : PageModel
 {
-
     private readonly IReservationRepository _reservations;
+    
+    public IEnumerable<Reservation> CurrentReservations { get; set; }
+    public IEnumerable<Reservation> PendingReservations { get; set; }
+    public IEnumerable<Reservation> PastReservations { get; set; }
 
     public Index(IReservationRepository reservations)
     {
         _reservations = reservations;
-    }
-
-    //public IAsyncEnumerable<Reservation>? Reservation { get; set; }
-    //public IAsyncEnumerable<Reservation>? PastReservations { get; set; }
-    
-    public Reservation? CurrentReservation { get; set; }
-    public IEnumerable<Reservation> PastReservations { get; set; }
-
-    public async Task<IActionResult> OnGet(int farmingCompanyId)
-    {
-        //Reservation = _reservations.GetReservation(farmingCompanyId);
-        //PastReservations = _reservations.GetAll(farmingCompanyId);   
         
-        CurrentReservation = await _reservations.GetCurrentReservation(farmingCompanyId);
+        CurrentReservations = Enumerable.Empty<Reservation>();
+        PendingReservations = Enumerable.Empty<Reservation>();
+        PastReservations = Enumerable.Empty<Reservation>();
+    }
+    
+    public void OnGet(int farmingCompanyId)
+    {
+        CurrentReservations = _reservations.GetCurrentReservations(farmingCompanyId).ToBlockingEnumerable();
+        
+        // TODO le due query qui sotto potrebbero essere trasformate in metodi della repository
         PastReservations =
             from reservation in _reservations.GetAll(farmingCompanyId).ToBlockingEnumerable()
-            where reservation.OnGoing == false && reservation.Accepted == true      // filtra solamente le prenotazioni NON attive
+            where reservation.OnGoing == false && reservation.Accepted      // filtra solamente le prenotazioni NON attive
             select reservation;
 
-        return Page();
+        PendingReservations =
+            from reservation in _reservations.GetAll(farmingCompanyId).ToBlockingEnumerable()
+            where reservation.OnGoing == false && reservation.Accepted == false     // filtra le prenotazioni NON ancora accettate e quindi NON attive
+            select reservation;
+        
     }
 }

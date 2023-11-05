@@ -1,6 +1,8 @@
 ﻿@page "/FarmingCompanies/{farmingCompanyId:int}/Reservations/Reservation"
 @model OnlyFarms.WebApp.Pages.FarmManager.Reservations.ReservationModel
+
 @inject UserManager<ApplicationUser> UserManager
+
 @{
     var user = await UserManager.GetUserAsync(User);
 }
@@ -29,7 +31,7 @@
         @foreach (var waterC in Model.Companies)
         {
             <tr>
-                <td><a href="/FarmingCompanies/@user.CompanyId/Reservations/Reservation/@waterC.Id">@waterC.Address</a></td>
+                <td><a href="/FarmingCompanies/@user!.CompanyId/Reservations/Reservation/@waterC.Id">@waterC.Address</a></td>
                 <td>@waterC.City</td>
                 <td>@waterC.Name</td>
                 <td>@waterC.WaterSupply</td>
