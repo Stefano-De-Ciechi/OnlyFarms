@@ -37,16 +37,16 @@
 
 @* modal con form di modifica per Water Supply e Global Water Limit, potrebbe essere esteso per modificare anche le altre informazioni dell'azienda *@
 <div class="container mt-4">
-    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#waterSupplyModal">
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#updateInformationsModal">
         Update Water Informations
     </button>
 </div>
 
-<div class="modal fade" id="waterSupplyModal" tabindex="-1" aria-labelledby="limitUpdateModalLabel" aria-hidden="true">
+<div class="modal fade" id="updateInformationsModal" tabindex="-1" aria-labelledby="updateInformationsModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="limitUpdateModalLabel">Water Informations</h1>
+                <h1 class="modal-title fs-5" id="updateInformationsModalLabel">Water Informations</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form asp-page-handler="updateInformations" method="post" asp-route-waterCompanyId="@Model.Company.Id">

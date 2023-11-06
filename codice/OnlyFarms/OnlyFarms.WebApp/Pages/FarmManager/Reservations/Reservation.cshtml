@@ -16,6 +16,22 @@
     </div>
 </div>
 
+@* spiegazione: usando un modal di bootstrap per inserire i valori di una prenotazione, se si inseriscono valori non validi si viene reindirizzati a questa pagina
+   passando nelle query url i valori errors e errorMessage; se questi valori sono presenti si mostra un messaggio di errore per informare che la richiesta di prenotazione
+   non e' stata inviata perche' errata *@
+@if (Request.Query["errors"] == "True")
+{
+    <div class="container mt-4">
+        <div id="errorAlert" class="alert alert-danger" role="alert">
+            @Request.Query["errorMessage"];
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('errorAlert').alert();
+    </script>
+}
+
 <div class="container mt-4">
     <h3 class="text"> SELECT THE WATER COMPANY</h3>
     <table class="table table-dark table-striped">
@@ -31,7 +47,9 @@
         @foreach (var waterC in Model.Companies)
         {
             <tr>
-                <td><a href="/FarmingCompanies/@user!.CompanyId/Reservations/Reservation/@waterC.Id">@waterC.Name</a></td>
+                <td>
+                    <a href="" data-bs-toggle="modal" data-bs-target="#newReservationModal" data-farmingCompanyId="@user!.CompanyId" data-waterCompanyId="@waterC.Id">@waterC.Name</a>
+                </td>
                 <td>@waterC.City</td>
                 <td>@waterC.Address</td>
                 <td>@waterC.WaterSupply</td>
@@ -41,3 +59,62 @@
     </table>
 
 </div>
+
+<div class="modal fade" id="newReservationModal" tabindex="-1" aria-labelledby="newReservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="newReservationModalLabel">New Reservation</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-page-handler="reservation" method="post">
+                <div class="modal-body">
+                    
+                    <input id="modalFarmingCompanyId" type="hidden" asp-for="Reservation.FarmingCompanyId">
+                    <input id="modalWaterCompanyId" type="hidden" asp-for="Reservation.WaterCompanyId">     @* il valore di questo campo viene cambiato dinamicamente in base a quale water company viene premuta *@
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Quantity</span>
+                        <input type="number" min="0" step="50" class="form-control" asp-for="Reservation.BookedQuantity" required>
+                        <span class="text-danger" asp-validation-for="Reservation.BookedQuantity"></span>
+                    </div>
+                    @if (TempData.ContainsKey("ErrorMessage"))
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Set your price</span>
+                        <input type="number" min="0" step="10" class="form-control" asp-for="Reservation.Price" required>
+                        <span class="text-danger" asp-validation-for="Reservation.Price"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    @* questo script serve a modificare in maniera dinamica i valori passati al form di creazione della prenotazione per ogni singola azienda in base al bottone premuto
+       cosi' e' possibile avere un unico modal per tutte le aziende, invece che avere un modal per azienda (duplicazione eccessiva di codice html) *@
+    
+    const modal = document.getElementById('newReservationModal');
+    const modalFarmingCompanyId = document.getElementById('modalFarmingCompanyId');
+    const modalWaterCompanyId = document.getElementById('modalWaterCompanyId');
+
+    document.addEventListener('click', function (event) {
+        if (event.target && event.target.getAttribute('data-bs-toggle') === 'modal') {
+            
+            const farmingCompanyId = event.target.getAttribute('data-farmingCompanyId');
+            const waterCompanyId = event.target.getAttribute('data-waterCompanyId');
+            
+            modalFarmingCompanyId.value = farmingCompanyId;
+            modalWaterCompanyId.value = waterCompanyId;
+        }
+    });
+</script>
