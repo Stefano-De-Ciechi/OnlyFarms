@@ -21,9 +21,9 @@
     <table class="table table-dark table-striped">
         <thead>
         <tr>
-            <th scope="col">ADDRESS</th>
-            <th scope="col">CITY</th>
             <th scope="col">NAME</th>
+            <th scope="col">CITY</th>
+            <th scope="col">ADDRESS</th>
             <th scope="col">WATER SUPPLY</th>
         </tr>
         </thead>
@@ -31,9 +31,9 @@
         @foreach (var waterC in Model.Companies)
         {
             <tr>
-                <td><a href="/FarmingCompanies/@user!.CompanyId/Reservations/Reservation/@waterC.Id">@waterC.Address</a></td>
+                <td><a href="/FarmingCompanies/@user!.CompanyId/Reservations/Reservation/@waterC.Id">@waterC.Name</a></td>
                 <td>@waterC.City</td>
-                <td>@waterC.Name</td>
+                <td>@waterC.Address</td>
                 <td>@waterC.WaterSupply</td>
             </tr>
         }

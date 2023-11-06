@@ -34,3 +34,40 @@
         <dd class="col-sm-10">@Model.Company.GlobalWaterLimit liters</dd>
     </dl>
 </div>
+
+@* modal con form di modifica per Water Supply e Global Water Limit, potrebbe essere esteso per modificare anche le altre informazioni dell'azienda *@
+<div class="container mt-4">
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#waterSupplyModal">
+        Update Water Informations
+    </button>
+</div>
+
+<div class="modal fade" id="waterSupplyModal" tabindex="-1" aria-labelledby="limitUpdateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="limitUpdateModalLabel">Water Informations</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-page-handler="updateInformations" method="post" asp-route-waterCompanyId="@Model.Company.Id">
+                <div class="modal-body">
+                    
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Water Supply</span>
+                        <input type="number" min="0" step="100" class="form-control" asp-for="NewWaterSupplyValue" value="@Model.Company.WaterSupply" required>
+                        <span class="text-danger" asp-validation-for="NewWaterSupplyValue"></span>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Global Water Limit</span>
+                        <input type="number" min="0" step="100" class="form-control" asp-for="NewGlobalWaterLimitValue" value="@Model.Company.GlobalWaterLimit" required>
+                        <span class="text-danger" asp-validation-for="NewGlobalWaterLimitValue"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

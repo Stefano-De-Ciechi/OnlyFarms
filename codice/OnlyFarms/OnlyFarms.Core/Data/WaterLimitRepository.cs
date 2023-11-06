@@ -58,6 +58,16 @@ public class WaterLimitRepository : IWaterLimitRepository
         var farmingCompany = await _farmingCompanies.Get(farmingCompanyId);
         var waterCompany = await _waterCompanies.Get(waterCompanyId);
 
+        try
+        {
+            var previous = await Get(waterCompanyId, farmingCompanyId);
+            throw new DbUpdateException("can't have more than one active water limit between the same companies at the same time");
+        }
+        catch (NotFoundException<WaterLimit> e)
+        {
+            // se si riceve un'eccezione NotFound vuol dire che non esistono limit tra le due aziende, quindi si puo' eseguire l'aggiunta al DB
+        }
+
         var newLimit = new WaterLimit()
         {
             FarmingCompanyId = farmingCompany.Id,

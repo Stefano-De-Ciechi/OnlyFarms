@@ -17,6 +17,12 @@ public class Profile : PageModel
     
     [BindProperty]
     public WaterCompany Company { get; set; }
+    
+    [BindProperty]
+    public int NewWaterSupplyValue { get; set; }
+    
+    [BindProperty]
+    public int NewGlobalWaterLimitValue { get; set; }
 
     public Profile(UserManager<ApplicationUser> userManager, ICompanyRepository<WaterCompany> companyRepository)
     {
@@ -31,5 +37,15 @@ public class Profile : PageModel
         var companyId = _user!.CompanyId ?? default(int);   // "cast" da Nullable<int> a int
         Company = await _companyRepository.Get(companyId);
         return Page();
+    }
+
+    public async Task<IActionResult> OnPostUpdateInformations(int waterCompanyId)
+    {
+        var currentCompanyValues = await _companyRepository.Get(waterCompanyId);
+        currentCompanyValues.WaterSupply = NewWaterSupplyValue;
+        currentCompanyValues.GlobalWaterLimit = NewGlobalWaterLimitValue;
+        
+        await _companyRepository.Update(waterCompanyId, currentCompanyValues);
+        return RedirectToPage("./Profile");
     }
 }
