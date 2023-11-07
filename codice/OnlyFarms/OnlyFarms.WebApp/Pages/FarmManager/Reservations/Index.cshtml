@@ -1,6 +1,7 @@
 @page "/FarmingCompanies/{farmingCompanyId:int}/Reservations"
 @model OnlyFarms.WebApp.Pages.FarmManager.Reservations.Index
 @inject UserManager<ApplicationUser> UserManager
+@inject ICompanyRepository<WaterCompany> WaterCompanies
 
 @{
     ViewData["Title"] = "Reservations";
@@ -27,19 +28,22 @@
                 <th scope="col">BOOKED QUANTITY</th>
                 <th scope="col">PRICE</th>
                 <th scope="col">STARTED</th>
-                <th scope="col">WATER COMPANY</th>
+                <th scope="col">WATER COMPANY NAME</th>
+                <th scope="col">WATER COMPANY CITY</th>
                 <th scope="col">ACTION</th>
             </tr>
             </thead>
             <tbody>
             @foreach (var reservation in Model.CurrentReservations)
             {
+                var waterCompany = await WaterCompanies.Get(reservation.WaterCompanyId);
                 <tr>
                     <td>@reservation.Id</td>
                     <td>@reservation.BookedQuantity</td>
                     <td>@reservation.Price</td>
                     <td>@reservation.Timestamp.ToString("dd/MM/yyyy")</td>
-                    <td>@reservation.WaterCompanyId</td>
+                    <td>@waterCompany.Name</td>
+                    <td>@waterCompany.City</td>
                     <td>
                         <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteReservationModal" data-reservationId="@reservation.Id">unsubscribe</button>
                     </td>
@@ -69,18 +73,21 @@
                     <th scope="col">ID</th>
                     <th scope="col">BOOKED QUANTITY</th>
                     <th scope="col">PRICE</th>
-                    <th scope="col">WATER COMPANY</th>
+                    <th scope="col">WATER COMPANY NAME</th>
+                    <th scope="col">WATER COMPANY CITY</th>
                     <th scope="col">STATE</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var reservation in Model.PendingReservations)
                 {
+                    var waterCompany = await WaterCompanies.Get(reservation.WaterCompanyId);
                     <tr>
                         <td>@reservation.Id</td>
                         <td>@reservation.BookedQuantity</td>
                         <td>@reservation.Price</td>
-                        <td>@reservation.WaterCompanyId</td>
+                        <td>@waterCompany.Name</td>
+                        <td>@waterCompany.City</td>
                         <td>PENDING</td>
                     </tr>
                 }
@@ -105,18 +112,21 @@
                     <th scope="col">BOOKED QUANTITY</th>
                     <th scope="col">PRICE</th>
                     <th scope="col">STARTED</th>
-                    <th scope="col">WATER COMPANY</th>
+                    <th scope="col">WATER COMPANY NAME</th>
+                    <th scope="col">WATER COMPANY CITY</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var reservation in Model.PastReservations)
                 {
+                    var waterCompany = await WaterCompanies.Get(reservation.WaterCompanyId);
                     <tr>
                         <td>@reservation.Id</td>
                         <td>@reservation.BookedQuantity</td>
                         <td>@reservation.Price</td>
                         <td>@reservation.Timestamp.ToString("dd/MM/yyyy")</td>
-                        <td>@reservation.WaterCompanyId</td>
+                        <td>@waterCompany.Name</td>
+                        <td>@waterCompany.City</td>
                     </tr>
                 }
             </tbody>
@@ -161,8 +171,7 @@
     document.addEventListener('click', function (event) {
         if (event.target && event.target.getAttribute('data-bs-toggle') === 'modal') {
             
-            const reservationId = event.target.getAttribute('data-reservationId');
-            modalReservationId.value = reservationId;
+            modalReservationId.value = event.target.getAttribute('data-reservationId');
         }
     });
 </script>

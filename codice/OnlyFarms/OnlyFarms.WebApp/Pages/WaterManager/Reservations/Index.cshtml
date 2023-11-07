@@ -1,11 +1,12 @@
 @page "/WaterCompanies/{waterCompanyId:int}/Reservations"
 @model OnlyFarms.WebApp.Pages.WaterManager.Reservations.Index
 
-@inject UserManager<ApplicationUser> _UserManager
+@inject UserManager<ApplicationUser> UserManager
+@inject ICompanyRepository<FarmingCompany> FarmingCompanies
 
 @{
     ViewData["Title"] = "Active Reservations";
-    var user = await _UserManager.GetUserAsync(User);
+    var user = await UserManager.GetUserAsync(User);
 }
 
 <div class="row" id="box-search">
@@ -34,18 +35,21 @@
                 <th scope="col">BOOKED QUANTITY </th>
                 <th scope="col">PRICE</th>
                 <th scope="col">STARTED</th>
-                <th scope="col">FARMING COMPANY</th>
+                <th scope="col">FARMING COMPANY NAME</th>
+                <th scope="col">FARMING COMPANY CITY</th>
             </tr>
             </thead>
             <tbody>
             @foreach (var reservation in Model.CurrentReservations)
             {
+                var farmingCompany = await FarmingCompanies.Get(reservation.FarmingCompanyId);
                 <tr>
                     <td>@reservation.Id</td>
                     <td>@reservation.BookedQuantity</td>
                     <td>@reservation.Price</td>
                     <td>@reservation.Timestamp.ToString("dd/MM/yyyy")</td>
-                    <td>@reservation.FarmingCompanyId</td>
+                    <td>@farmingCompany.Name</td>
+                    <td>@farmingCompany.City</td>
                 </tr>
             }
             </tbody>
