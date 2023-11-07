@@ -134,7 +134,7 @@ namespace OnlyFarms.WebApp.Areas.Identity.Pages.Account
                     return RedirectToPage("./Lockout");
                 }
 
-                // TODO aggiunto qui il redirect alla pagina "utente non attivo"
+                // aggiunto il redirect alla pagina "utente non attivo"
                 if (result.IsNotAllowed)
                 {
                     _logger.LogWarning("User with non-active account.");

@@ -8,6 +8,7 @@ namespace OnlyFarms.WebApp.Pages.FarmManager.Reservations;
 public class Index : PageModel
 {
     private readonly IReservationRepository _reservations;
+    private readonly IWaterLimitRepository _waterLimits;
     
     public IEnumerable<Reservation> CurrentReservations { get; set; }
     public IEnumerable<Reservation> PendingReservations { get; set; }
@@ -16,9 +17,10 @@ public class Index : PageModel
     [BindProperty]
     public int DeleteReservationId { get; set; }
 
-    public Index(IReservationRepository reservations)
+    public Index(IReservationRepository reservations, IWaterLimitRepository waterLimits)
     {
         _reservations = reservations;
+        _waterLimits = waterLimits;
         
         CurrentReservations = Enumerable.Empty<Reservation>();
         PendingReservations = Enumerable.Empty<Reservation>();
@@ -39,7 +41,6 @@ public class Index : PageModel
             from reservation in _reservations.GetAll(farmingCompanyId).ToBlockingEnumerable()
             where reservation.OnGoing == false && reservation.Accepted == false     // filtra le prenotazioni NON ancora accettate e quindi NON attive
             select reservation;
-        
     }
 
     public async Task<IActionResult> OnPostDeleteReservation()
@@ -49,6 +50,19 @@ public class Index : PageModel
         reservation!.OnGoing = false;
 
         await _reservations.Update(reservation.FarmingCompanyId, reservation.WaterCompanyId, DeleteReservationId, reservation);
+        
+        // controlla se esiste un WaterLimit tra le due aziende (in teoria ogni volta che la prima prenotazione tra due aziende viene accettata se ne crea uno)
+        try
+        {
+            var limit = await _waterLimits.Get(reservation.WaterCompanyId, reservation.FarmingCompanyId);
+            // se esiste un limite lo rimuove
+            await _waterLimits.Delete(limit.Id);
+        }
+        catch (NotFoundException<WaterLimit> e)
+        {
+            // se non esiste un limite si ignora questa parte
+        }
+        
         return RedirectToPage("./Index", new { reservation.FarmingCompanyId });
     }
 }

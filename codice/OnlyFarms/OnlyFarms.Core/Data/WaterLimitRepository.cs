@@ -2,8 +2,6 @@ namespace OnlyFarms.Core.Data;
 
 public class WaterLimitRepository : IWaterLimitRepository
 {
-    // TODO add WaterLimits endpoints in the REST API
-    
     private readonly DataContext _context;
     private readonly DbSet<WaterLimit> _limits;
     private readonly ICompanyRepository<FarmingCompany> _farmingCompanies;

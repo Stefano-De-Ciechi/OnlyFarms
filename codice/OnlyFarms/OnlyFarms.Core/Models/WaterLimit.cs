@@ -14,8 +14,6 @@ public class WaterLimit : IHasId
      * si puo' eventualmente recuperare la FarmingCompany con un'altra richiesta al DB)
      */
     
-    // TODO rivedere questo aspetto per tutte le repository (commento sopra)!
-    
     [ForeignKey("FarmingCompanyId")]
     public int FarmingCompanyId { get; set; }
     public FarmingCompany FarmingCompany { get; set; }

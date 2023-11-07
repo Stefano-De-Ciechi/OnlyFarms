@@ -23,10 +23,6 @@
             </div>
             <div class="col">
                 
-                @* TODO implementare la modifica delle informazioni (form dentro un modal)
-                <button class="btn btn-primary">Edit</button>
-                *@
-                
                 <!-- Button trigger delete modal -->
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                   Un-Register
@@ -144,7 +140,7 @@
                                         </select>
                                     </div>
                                     <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon2">Tag</span>
+                                        <span class="input-group-text">Tag</span>
                                         <input asp-for="Actuator.Tag" type="text" class="form-control" placeholder="ex. south sprinkler" required>
                                         <span asp-validation-for="Actuator.Tag" class="text-danger"></span>
                                     </div>

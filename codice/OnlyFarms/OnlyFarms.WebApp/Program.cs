@@ -34,7 +34,6 @@ builder.Services.AddAuthentication().AddGoogle(googleOptions =>
     googleOptions.ClientSecret = configuration["Authentication:Google:ClientSecret"]!;
 });
 
-// TODO ha senso dare all'admin accesso anche alle pagine riservate a FarmManager e WaterManager?
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(Roles.Admin, policy =>
@@ -140,7 +139,7 @@ async Task AddAdmin()
     }
 }
 
-// TODO spostare da qualche parte; magari bisogna aggiungere dei campi aggiuntivi, es. a quale azienda (e quale tipo di azienda) fa parte (gli admin NON hanno azienda)
+// record usato solamente per raccogliere le informazioni sull'utente admin dal file user-secrets, non viene piu usato nel resto del progetto
 internal record User
 {
     public string? UserName { get; set; }

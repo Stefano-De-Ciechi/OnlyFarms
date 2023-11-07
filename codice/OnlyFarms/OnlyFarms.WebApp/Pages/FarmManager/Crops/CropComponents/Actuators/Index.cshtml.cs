@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace OnlyFarms.WebApp.Pages.FarmManager.Crops.CropComponents.Actuators;
 
-// TODO Index di Attuatori e Index di Sensori potrebbero essere rese un'unica classe generica
-
 [Authorize(Policy = Roles.FarmManager)]
 public class Index : BasePageModel
 {

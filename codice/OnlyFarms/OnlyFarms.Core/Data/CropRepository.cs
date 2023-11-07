@@ -1,6 +1,5 @@
 namespace OnlyFarms.Core.Data;
 
-// TODO la classe potrebbe essere resa generica per funzionare con tutte le entita' che richiedono un farmingCompanyId (ma devono anche implementare tutti i verbi HTTP)
 public class CropRepository : ICropRepository
 {
     private readonly DataContext _context;
@@ -40,7 +39,7 @@ public class CropRepository : ICropRepository
         var company = await _companies.Get(farmingCompanyId);
 
         crop.FarmingCompanyId = company.Id;
-        company.WaterSupply += crop.WaterNeeds;     // TODO rimuovere se questo non e' il comportamento voluto
+        company.WaterSupply += crop.WaterNeeds;     // il campo WaterSupply viene usato come quantita' totale di acqua necessaria per tutte le coltivazioni dell'azienda
 
         await _crops.AddAsync(crop);
         await _context.SaveChangesAsync();
@@ -54,14 +53,12 @@ public class CropRepository : ICropRepository
         
         cropUpdate.Id = crop.Id;
         cropUpdate.FarmingCompanyId = crop.FarmingCompanyId;
-
-        /*
-         * spiegazione: se viene aggiornata la quantita' d'acqua necessaria alla coltivazione, allora il totale di acqua necessaria all'azienda deve cambiare di conseguenza
-        */
+        
+        // spiegazione: se viene aggiornata la quantita' d'acqua necessaria alla coltivazione, allora il totale di acqua necessaria all'azienda deve cambiare di conseguenza
         if (!crop.WaterNeeds.Equals(cropUpdate.WaterNeeds))
         {
             var company = await _companies.Get(farmingCompanyId);
-            company.WaterSupply -= crop.WaterNeeds;    // TODO rimuovere se questo non e' il comportamento voluto
+            company.WaterSupply -= crop.WaterNeeds;
             company.WaterSupply += cropUpdate.WaterNeeds;
         }
         
@@ -78,7 +75,7 @@ public class CropRepository : ICropRepository
         _crops.Remove(crop);
         
         var company = await _companies.Get(farmingCompanyId);
-        company.WaterSupply -= crop.WaterNeeds;    // TODO rimuovere se questo non e' il comportamento voluto
+        company.WaterSupply -= crop.WaterNeeds;
         
         await _context.SaveChangesAsync();
 

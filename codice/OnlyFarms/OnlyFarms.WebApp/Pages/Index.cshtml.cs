@@ -16,7 +16,7 @@ public class IndexModel : PageModel
 
     public IActionResult OnGet()
     {
-        // TODO aggiungere qui la logica per avere pagine di default in base al tipo di utente?
+        // logica per avere pagine di "default" quando un certo tipo di utente esegue il login
         if (User.Identity != null && User.Identity.IsAuthenticated && User.HasClaim(nameof(Roles), Roles.Admin))
         {
             return RedirectToPage("/AdminPage");

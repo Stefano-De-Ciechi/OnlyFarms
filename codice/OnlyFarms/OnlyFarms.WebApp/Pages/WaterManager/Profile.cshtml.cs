@@ -7,7 +7,6 @@ namespace OnlyFarms.WebApp.Pages.WaterManager;
 
 [Authorize(Policy = Roles.WaterManager)]
 
-// TODO i file FarmManager e WaterManager Profile.cshtml.cs potrebbero essere resi generici
 public class Profile : PageModel
 {
     private readonly UserManager<ApplicationUser> _userManager;
