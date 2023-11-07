@@ -29,8 +29,8 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<Reservation?> GetById(int reservationId)
     {
-        return await _reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.Accepted == false);
-        
+        //return await _reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.Accepted == false);
+        return await _reservations.FirstOrDefaultAsync(r => r.Id == reservationId);
     }
 
     public async IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId, DateTime? between, DateTime? and)

@@ -12,6 +12,9 @@ public class Index : PageModel
     public IEnumerable<Reservation> CurrentReservations { get; set; }
     public IEnumerable<Reservation> PendingReservations { get; set; }
     public IEnumerable<Reservation> PastReservations { get; set; }
+    
+    [BindProperty]
+    public int DeleteReservationId { get; set; }
 
     public Index(IReservationRepository reservations)
     {
@@ -37,5 +40,15 @@ public class Index : PageModel
             where reservation.OnGoing == false && reservation.Accepted == false     // filtra le prenotazioni NON ancora accettate e quindi NON attive
             select reservation;
         
+    }
+
+    public async Task<IActionResult> OnPostDeleteReservation()
+    {
+        /* la prenotazione non viene eliminata dal DB, viene settato il flag OnGoing=false e finisce nella tabella history*/
+        var reservation = await _reservations.GetById(DeleteReservationId);
+        reservation!.OnGoing = false;
+
+        await _reservations.Update(reservation.FarmingCompanyId, reservation.WaterCompanyId, DeleteReservationId, reservation);
+        return RedirectToPage("./Index", new { reservation.FarmingCompanyId });
     }
 }

@@ -78,12 +78,7 @@
                         <input type="number" min="0" step="50" class="form-control" asp-for="Reservation.BookedQuantity" required>
                         <span class="text-danger" asp-validation-for="Reservation.BookedQuantity"></span>
                     </div>
-                    @if (TempData.ContainsKey("ErrorMessage"))
-                    {
-                        <div class="alert alert-danger">
-                            @TempData["ErrorMessage"]
-                        </div>
-                    }
+                    
                     <div class="input-group mb-3">
                         <span class="input-group-text">Set your price</span>
                         <input type="number" min="0" step="10" class="form-control" asp-for="Reservation.Price" required>

@@ -37,3 +37,14 @@ body {
 .pl-0 {
   padding-left: 0;
 }
+
+
+/* aggiunto un font esterno per avere un'estetica uniforme tra le varie piattaforme */
+@font-face {
+  font-family: 'Noto Sans';
+  src: url('../fonts/NotoSans-Regular.ttf') format('ttf');
+}
+
+* {
+  font-family: 'Noto Sans', monospace;
+}
