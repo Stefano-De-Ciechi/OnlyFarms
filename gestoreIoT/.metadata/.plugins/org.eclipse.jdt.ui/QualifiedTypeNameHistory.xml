@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<qualifiedTypeNameHistroy>
-    <fullyQualifiedTypeName name="org.eclipse.paho.client.mqttv3.MqttException"/>
-    <fullyQualifiedTypeName name="org.eclipse.paho.client.mqttv3.MqttClient"/>
-    <fullyQualifiedTypeName name="org.eclipse.paho.client.mqttv3.persist.MemoryPersistence"/>
-    <fullyQualifiedTypeName name="org.eclipse.paho.client.mqttv3.IMqttMessageListener"/>
-    <fullyQualifiedTypeName name="org.eclipse.paho.client.mqttv3.MqttMessage"/>
-</qualifiedTypeNameHistroy>

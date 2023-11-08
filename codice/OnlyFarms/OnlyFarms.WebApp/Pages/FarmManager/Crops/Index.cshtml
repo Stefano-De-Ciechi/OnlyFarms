@@ -39,9 +39,9 @@
                         </a>
                     </td>
                     <td>@crop.IrrigationType</td>
-                    <td>@crop.SurfaceArea</td>
-                    <td>@crop.WaterNeeds</td>
-                    <td>@crop.IdealHumidity</td>
+                    <td>@crop.SurfaceArea hectars</td>
+                    <td>@crop.WaterNeeds liters</td>
+                    <td>@crop.IdealHumidity %</td>
                 </tr>
             }
             </tbody>
@@ -84,18 +84,18 @@
                         </select>
                     </div>
                     <div class="input-group mb-3">
-                        <span class="input-group-text">Surface Area</span>
-                        <input type="text" class="form-control" asp-for="Crop.SurfaceArea" aria-required="true" placeholder="" required>
+                        <span class="input-group-text">Surface Area (hectars)</span>
+                        <input type="number" min="1" step="1" class="form-control" asp-for="Crop.SurfaceArea" aria-required="true" placeholder="" required>
                         <span asp-validation-for="Crop.SurfaceArea" class="text-danger"></span>
                     </div>
                     <div class="input-group mb-3">
-                        <span class="input-group-text">Water Needs</span>
-                        <input type="text" class="form-control" asp-for="Crop.WaterNeeds" aria-required="true" placeholder="" required>
+                        <span class="input-group-text">Water Needs (liters)</span>
+                        <input type="number" min="1000" step="100" class="form-control" asp-for="Crop.WaterNeeds" aria-required="true" placeholder="" required>
                         <span asp-validation-for="Crop.WaterNeeds" class="text-danger"></span>
                     </div>
                     <div class="input-group mb-3">
-                        <span class="input-group-text">Ideal Humidity</span>
-                        <input type="text" class="form-control" asp-for="Crop.IdealHumidity" aria-required="true" placeholder="" required>
+                        <span class="input-group-text">Ideal Humidity (%)</span>
+                        <input type="number" min="0" max="100" step="1" class="form-control" asp-for="Crop.IdealHumidity" aria-required="true" placeholder="" required>
                         <span asp-validation-for="Crop.IdealHumidity" class="text-danger"></span>
                     </div>
                 </div>

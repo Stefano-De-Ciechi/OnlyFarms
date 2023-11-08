@@ -39,8 +39,8 @@
                 var waterCompany = await WaterCompanies.Get(reservation.WaterCompanyId);
                 <tr>
                     <td>@reservation.Id</td>
-                    <td>@reservation.BookedQuantity</td>
-                    <td>@reservation.Price</td>
+                    <td>@reservation.BookedQuantity liters</td>
+                    <td>€ @reservation.Price</td>
                     <td>@reservation.Timestamp.ToString("dd/MM/yyyy")</td>
                     <td>@waterCompany.Name</td>
                     <td>@waterCompany.City</td>
@@ -84,8 +84,8 @@
                     var waterCompany = await WaterCompanies.Get(reservation.WaterCompanyId);
                     <tr>
                         <td>@reservation.Id</td>
-                        <td>@reservation.BookedQuantity</td>
-                        <td>@reservation.Price</td>
+                        <td>@reservation.BookedQuantity liters</td>
+                        <td>€ @reservation.Price</td>
                         <td>@waterCompany.Name</td>
                         <td>@waterCompany.City</td>
                         <td>PENDING</td>
@@ -122,8 +122,8 @@
                     var waterCompany = await WaterCompanies.Get(reservation.WaterCompanyId);
                     <tr>
                         <td>@reservation.Id</td>
-                        <td>@reservation.BookedQuantity</td>
-                        <td>@reservation.Price</td>
+                        <td>@reservation.BookedQuantity liters</td>
+                        <td>€ @reservation.Price</td>
                         <td>@reservation.Timestamp.ToString("dd/MM/yyyy")</td>
                         <td>@waterCompany.Name</td>
                         <td>@waterCompany.City</td>

@@ -1,5 +1,8 @@
 ﻿@page "/WaterCompany/{waterCompanyId:int}/Reservations/Manage"
 @model OnlyFarms.WebApp.Pages.WaterManager.Reservations.ManageModel
+
+@inject ICompanyRepository<FarmingCompany> FarmingCompanies
+
 @{
     ViewData["Title"] = "Manage Reservations";
 }
@@ -10,8 +13,9 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th>Company Name</th>
+                    <th>Company City</th>
                     <th>Booked QTY</th>
-                    <th>Company ID</th>
                     <th>Price</th>
                     <th>Status</th>
                 </tr>
@@ -20,10 +24,12 @@
             <tbody>
                 @foreach (var reservation in Model.ReservationsList)
                 {
+                    var farmingCompany = await FarmingCompanies.Get(reservation.FarmingCompanyId);
                     <tr>
-                        <th>@reservation.BookedQuantity</th>
-                        <th>@reservation.FarmingCompanyId</th>
-                        <th>@reservation.Price</th>
+                        <th>@farmingCompany.Name</th>
+                        <th>@farmingCompany.City</th>
+                        <th>@reservation.BookedQuantity liters</th>
+                        <th>€ @reservation.Price</th>
                         <th>@(reservation.Accepted? "Active" : "Pending")</th>
                         <th>
                             <div class="pull-left">

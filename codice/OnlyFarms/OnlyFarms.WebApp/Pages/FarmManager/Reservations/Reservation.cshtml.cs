@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.JSInterop;
 
 namespace OnlyFarms.WebApp.Pages.FarmManager.Reservations
 {
+    [Authorize(Policy = Roles.FarmManager)]
 	public class ReservationModel : PageModel
     {
         private readonly ICompanyRepository<WaterCompany> _companies;

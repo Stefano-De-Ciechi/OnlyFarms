@@ -72,8 +72,8 @@
                     
                     @* il campo WaterSupply del form e' nascosto per le FarmingCompany e ha valore di default = 0 *@
                     <div id="waterSupplyInput" class="col-md-6" hidden="hidden">
-                        <label asp-for="WaterCompany.WaterSupply">Water Supply</label>
-                        <input type="text" class="form-control" asp-for="WaterCompany.WaterSupply" aria-required="true" placeholder="Water Supply" value="0" required>
+                        <label asp-for="WaterCompany.WaterSupply">Water Supply (liters)</label>
+                        <input type="number" min="50000" step="10000" class="form-control" asp-for="WaterCompany.WaterSupply" aria-required="true" placeholder="Water Supply" value="0" required>
                         <span asp-validation-for="WaterCompany.WaterSupply" class="text-danger"></span>
                     </div>
                 </div>

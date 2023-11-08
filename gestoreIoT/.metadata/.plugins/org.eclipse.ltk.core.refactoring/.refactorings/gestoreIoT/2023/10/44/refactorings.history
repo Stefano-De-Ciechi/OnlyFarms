@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename compilation unit &apos;gestoreIoT.testComunicazioneAPI.java&apos; to &apos;TestComunicazioneAPI.java&apos;&#x0A;- Original project: &apos;gestoreIoT&apos;&#x0A;- Original element: &apos;gestoreIoT.testComunicazioneAPI.java&apos;&#x0A;- Renamed element: &apos;gestoreIoT.TestComunicazioneAPI.java&apos;" description="Rename compilation unit &apos;testComunicazioneAPI.java&apos;" flags="2" id="org.eclipse.jdt.ui.rename.compilationunit" input="/src&lt;gestoreIoT{testComunicazioneAPI.java" name="TestComunicazioneAPI.java" references="false" stamp="1698653977912" version="1.0"/>
-</session>

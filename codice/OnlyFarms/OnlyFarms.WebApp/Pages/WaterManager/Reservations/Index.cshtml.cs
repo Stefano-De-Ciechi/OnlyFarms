@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace OnlyFarms.WebApp.Pages.WaterManager.Reservations;
 
+[Authorize(Policy = Roles.WaterManager)]
 public class Index : PageModel
 {
     private readonly IReservationRepository _reservations;

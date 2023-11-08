@@ -1,7 +1,0 @@
-INDEX VERSION 1.134+/Users/robertmelente/Desktop/aa22-23-gruppo13/gestoreIoT/.metadata/.plugins/org.eclipse.jdt.core
-2416543252.index
-3833289275.index
-113822108.index
-1865797976.index
-3870568079.index
-1963392226.index

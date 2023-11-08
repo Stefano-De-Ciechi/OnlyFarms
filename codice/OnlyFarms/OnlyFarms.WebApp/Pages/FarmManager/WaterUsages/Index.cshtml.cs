@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace OnlyFarms.WebApp.Pages.FarmManager.WaterUsages;
 
-[Authorize]
+[Authorize]     // questa pagina e' accessibile sia da utenti FarmManger sia da utenti WaterManager
 public class Index : PageModel
 {
     private readonly IWaterUsageRepository _waterUsages;

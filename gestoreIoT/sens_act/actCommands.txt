@@ -1,8 +1,0 @@
-b'actuators/command'
-b'Deactivate 2023-11-01T12:00:42.318094'
-b'actuators/command'
-b'Deactivate 2023-11-01T17:15:29.175778'
-b'actuators/command'
-b'Deactivate 2023-11-01T17:17:19.669121'
-b'actuators/command'
-b'Deactivate 2023-11-01T17:18:37.361692'
