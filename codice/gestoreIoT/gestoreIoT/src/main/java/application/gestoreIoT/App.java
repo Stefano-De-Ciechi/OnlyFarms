@@ -35,7 +35,8 @@ public class App
 	        
 	        client.publish(commandTopic, mqttMessage);
 	        
-	        client.close();
+	        client.disconnect();
+			client.close();
 	 }
 	 
 	

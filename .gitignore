@@ -19,3 +19,12 @@ codice/OnlyFarms/OnlyFarms.WebApp/obj
 codice/OnlyFarms/OnlyFarms.sln.DotSettings.user
 codice/OnlyFarms/OnlyFarms.RestApi/.idea/
 codice/OnlyFarms/OnlyFarms.RestApi/Folder.DotSettings.user
+
+**/.DS_Store
+
+**/.idea/
+**/.metadata/
+
+**/.settings/
+**/.classpath
+**/.project
