@@ -10,7 +10,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 public class GestoreIoT {
 	
 	private String broker = "tcp://localhost:1883";
-	private MqttClient client = new MqttClient(this.broker, MqttClient.generateClientId(), new MemoryPersistence());
+	private MqttClient client = new MqttClient(this.broker, MqttClient.generateClientId());
 	private int temperature;
 	private int humidity;
 	

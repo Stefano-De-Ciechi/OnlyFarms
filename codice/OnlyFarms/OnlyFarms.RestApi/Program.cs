@@ -282,7 +282,7 @@ void MapCropsRoutes()
         var res = repository.GetAll(companyId);
         return Results.Ok(res);
     })
-        .RequireAuthorization(Policy.IsFarmManager)
+        .RequireAuthorization(Policy.IsIotSubsystem)    // il sistema IoT deve poter accedere alle informazioni delle coltivazioni della propria azienda
         .Produces<IAsyncEnumerable<Crop>>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
@@ -294,7 +294,7 @@ void MapCropsRoutes()
         var crop = await repository.Get(companyId, id);
         return Results.Ok(crop);
     })
-        .RequireAuthorization(Policy.IsFarmManager)
+        .RequireAuthorization(Policy.IsIotSubsystem)    // il sistema IoT deve poter accedere alle informazioni delle coltivazioni della propria azienda
         .Produces<Crop>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
