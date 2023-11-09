@@ -48,9 +48,11 @@ public class TokenRepository : ITokenRepository
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSecretKey"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claimsList = user.Claims.Where(claim => claim.Type != nameof(Roles));   // seleziona tutti i claim dell'utente meno Roles.FarmManager
         
         var token = new JwtSecurityToken(
-            claims: new []{ new Claim(nameof(Roles), Roles.IoTSubSystem) },
+            claims: claimsList.Append(new Claim(nameof(Roles), Roles.IoTSubSystem)),    // "rimpiazza" Roles.FarmManager con Roles.IotSubsystem
             expires: DateTime.Now.AddYears(1),      // validita' un anno
             signingCredentials: credentials
         );

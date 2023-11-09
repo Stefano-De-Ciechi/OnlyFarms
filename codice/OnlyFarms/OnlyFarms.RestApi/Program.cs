@@ -148,7 +148,7 @@ app.UseExceptionHandler(errorApp =>
 #endregion
 
 #region ===== App Setup and Routes Mapping =====
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();    // rimosso per semplificare la comunicazione con la rest api da parte del Sottosistema IoT (bisognerebbe eseguire il thrust di un certificato self-signed)
 
 MapCompanyRoutes<FarmingCompany>("farmingCompanies");
 MapCompanyRoutes<WaterCompany>("waterCompanies");
