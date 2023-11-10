@@ -2,8 +2,6 @@ import time
 import paho.mqtt.client as mqtt
 import threading
 
-import sensors
-
 #from sensors import cropId
 
 
@@ -41,7 +39,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
     print("Connected with result code " + str(rc))
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
-    client.subscribe(f"1/actuators/command", qos=0);
+    client.subscribe("actuators/command", qos=0);
 
 
     # The callback for when a PUBLISH message is received from the server.
