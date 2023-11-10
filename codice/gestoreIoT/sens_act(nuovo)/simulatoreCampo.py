@@ -4,8 +4,9 @@ from random import randint
 
 
 def SetValues():
-    filePath = os.path.dirname(os.path.abspath(
-        __file__))  # serve a trovare il file anche quando il programma viene eseguito partendo da un'altra cartella
+    # serve a trovare il file anche quando il programma viene eseguito partendo da un'altra cartella
+    filePath = os.path.dirname(os.path.abspath(__file__)) 
+    
     fileName = os.path.join(filePath, "datiSensore.json")
 
     with open(fileName, "r") as f:
