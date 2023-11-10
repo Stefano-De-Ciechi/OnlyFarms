@@ -9,7 +9,7 @@ message_received_event = threading.Event()
 
 def on_connect(client, userdata, flags, rc, properties=None):
     print("Connected with result code "+str(rc))
-    client.subscribe("sensors/data", qos=0);
+    client.subscribe("command/sensors", qos=0);
 
 def load_data(filename):
     try:
@@ -19,13 +19,23 @@ def load_data(filename):
     except FileNotFoundError:
         return None
 
-cropId = None
+cropId = 1
+dayTime = None
 def on_message(client, userdata, msg):
     print("Received cropId on topic " + msg.topic + ": " + str(msg.payload))
-    global cropId
-    cropId = str(msg.payload)
-
+    global dayTime
+    dayTime = str(msg.payload)
     message_received_event.set()
+
+    filename = "datiSensore.json"
+    weatherData = load_data(filename)
+
+    if weatherData and dayTime in weatherData:
+        data = weatherData[dayTime]
+        client.publish(f"sensors/data/send/{cropId}", payload=str(data), qos=0, retain=False)
+        dayTime = None
+    else:
+        print("Data is null")
 
 
 def on_publish(client, userdata, mid):
@@ -40,37 +50,42 @@ client.connect("localhost", 1883, 60)
 client_thread = threading.Thread(target=client.loop_forever)
 client_thread.start()
 
-
-while cropId is None:
+while dayTime is None:
     time.sleep(1)
 
 
-def publish_message():
+if KeyboardInterrupt:
+    client.disconnect()
+    client.loop_stop()
 
+"""def publish_message():
     #ogni 10 secondi vengono mandati i dati del file datiSensori
-    while True:
-        dayTime = input("Select the time of the day that you like to receive data from: [Mattina, Pomeriggio, Sera]");
+   while True:
         filename = "datiSensore.json"
         weatherData = load_data(filename)
-
 
         if weatherData:
             if dayTime in weatherData:
                 data = weatherData[dayTime]
-                client.publish(f"{cropId[2]}/sensors/data", payload=str(data), qos=0, retain=False)
+                client.publish(f"sensors/data/send/{cropId}", payload=str(data), qos=0, retain=False)
         else:
             print("è null")
-
         #while True:
          #   client.publish("sensors/data", payload="ciao", qos=0, retain=False)
           #  time.sleep(10)
-
+"""
 
 #viene inizializzato un nuovo thread per spedire periodicamente informazioni
-publish_thread = threading.Thread(target=publish_message)
-publish_thread.start()
+#publish_thread = threading.Thread(target=publish_message)
+#publish_thread.start()
+
+client.loop_start()
 
 
+"""try:
+    while True:
+        pass
+except """
 #client.loop_forever()
 
 
