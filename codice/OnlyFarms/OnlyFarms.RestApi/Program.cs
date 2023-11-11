@@ -441,6 +441,21 @@ void MapCropComponentsPropertiesRoutes<TC, TCp>(string routeName) where TC : cla
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
+    
+    // POST the same command to all Actuators
+    if (typeof(TCp) == typeof(Command))
+    {
+        app.MapPost($"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/actuators/commands/", async ([FromServices] ICropComponentPropertyRepository<TCp> repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromBody] TCp command) =>
+        {
+            await repository.AddToAllComponents(companyId, cropId, command);
+        })
+            .WithTags(routeName.Capitalize())
+            .RequireAuthorization(Policy.IsIotSubsystem)
+            .Produces(200)
+            .Produces<ErrorMessage>(401)
+            .Produces<ErrorMessage>(403)
+            .Produces<ErrorMessage>(404);
+    } 
 }
 
 void MapWaterUsageRoutes()
