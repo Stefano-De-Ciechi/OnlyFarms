@@ -19,23 +19,20 @@ def SetValues():
     pomeriggio_umidita = randint(45, 50)
     sera_temperatura = randint(17, 20)
     sera_umidita = randint(50, 55)
-    sera_acqua_rimanente = data["b'Sera'"]["Acqua rimanente"]
-
-    #if "Sera" in data:
-     #   sera_acqua_rimanente = data["b'Sera"]["Acqua rimanente"]
+    sera_acqua_rimanente = data["Sera"]["Acqua rimanente"]
 
     data.update({
-        "b'Mattina'": {
+        "Mattina": {
             "Temperatura": mattina_temperatura,
-            "Umidità": mattina_umidita
+            "Umidita": mattina_umidita
         },
-        "b'Pomeriggio'": {
+        "Pomeriggio": {
             "Temperatura": pomeriggio_temperatura,
-            "Umidità": pomeriggio_umidita
+            "Umidita": pomeriggio_umidita
         },
-        "b'Sera'": {
+        "Sera": {
             "Temperatura": sera_temperatura,
-            "Umidità": sera_umidita,
+            "Umidita": sera_umidita,
             "Acqua rimanente": sera_acqua_rimanente
         },
 
