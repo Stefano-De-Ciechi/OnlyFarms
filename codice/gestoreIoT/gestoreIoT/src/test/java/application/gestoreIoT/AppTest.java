@@ -31,4 +31,9 @@ public class AppTest
     public void testPostSensorMeasurement() {
         assertTrue(client.sendSensorMeasurement(testCropId, testSensorId, 11, "test measure"));
     }
+
+    @Test
+    public void testPostCommandToAllActuators() {
+        assertTrue(client.sendCommandToAllActuators(testCropId, "TEST ALL ON"));
+    }
 }

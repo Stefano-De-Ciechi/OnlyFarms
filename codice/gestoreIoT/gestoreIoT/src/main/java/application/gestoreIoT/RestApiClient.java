@@ -8,11 +8,15 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO aggiungere un metodo per inviare alla Rest API la water usage della giornata (solo la sera)
+
 public class RestApiClient {
     private String apiUrl;
     private final RestTemplate client;
     private final HttpHeaders headers;
     private final Gson jsonConverter;
+
+    private final String errorMessage = "check that the rest api is running on http://localhost:5234";
 
     public RestApiClient(int farmingCompanyId, String jwtToken) {
         this.apiUrl = "http://localhost:5234/api/v1/farmingCompanies/" + farmingCompanyId + "/crops/";
@@ -46,7 +50,7 @@ public class RestApiClient {
             idealHumidity = ((Double) map.get("idealHumidity")).intValue();
 
         } catch (ResourceAccessException e) {
-            System.err.println(e.getMessage());
+            System.err.println(e.getMessage() + "\n" + errorMessage);
             return -1;
         }
 
@@ -81,7 +85,7 @@ public class RestApiClient {
             }
 
         } catch (ResourceAccessException e) {
-            System.err.println(e.getMessage());
+            System.err.println(e.getMessage() + "\n" + errorMessage);
             return false;
         }
 
@@ -116,21 +120,41 @@ public class RestApiClient {
             }
 
         } catch (ResourceAccessException e) {
-            System.err.println(e.getMessage());
+            System.err.println(e.getMessage() + "\n" + errorMessage);
             return false;
         }
 
         return false;
     }
 
-    public static void main(String[] args) {
-        RestApiClient client = new RestApiClient(1, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6Ijg3MjEwYjViLTZkZDgtNDQxYy1hNzhiLWUyZDJiYTBjZTAyYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJmYXJtMUB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImZhcm0xQHRlc3QuY29tIiwiQXNwTmV0LklkZW50aXR5LlNlY3VyaXR5U3RhbXAiOiJBRUpYREU0SkhaNE9VWjUyQkhZN0VSRFJLSlI3RTZWNyIsImFtciI6InB3ZCIsIlJvbGVzIjoiaW90U3ViU3lzdGVtIiwiZXhwIjoxNzMxMTczMDAxfQ.tLgiuzypgfRiNqKe8gjyvColE50Xnxfj6jKkY1wZUI8");
-        int humidity = client.getCropIdealHumidity(1);
-        System.out.println("received ideal humidity value of crop 1: " + humidity);
-        humidity = client.getCropIdealHumidity(2);
-        System.out.println("received ideal humidity value of crop 2: " + humidity);
+    /* esegue una POST request
+       manda un messaggio con un json body {"state" : state}
+       all url /api/v1/farmingCompanies/{farmingCompanyId}/crops/{cropId}/actuators/commands
+       cioe' uno stato a tutti gli attuatori di una coltivazione
+    */
+    public boolean sendCommandToAllActuators(int cropId, String state) {
+        String url = apiUrl + cropId + "/actuators/commands/";      // endpoint per mandare lo stesso comando a tutti gli attuatori di una coltivazione
 
-        //client.sendSensorMeasurement(1, 1, 55, "TEST");
-        //client.sendActuatorCommand(1, 1, "TEST ON");
+        HashMap<String, Object> body = new HashMap<>();
+        body.put("state", state);
+
+        String jsonBody = jsonConverter.toJson(body);
+        HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+
+        try {
+            ResponseEntity<String> response = client.exchange(url, HttpMethod.POST, request, String.class);
+            HttpStatusCode status = response.getStatusCode();
+
+            if (status.is2xxSuccessful()) {
+                return true;
+            }
+
+        } catch (ResourceAccessException e) {
+            System.err.println(e.getMessage() + "\n" + errorMessage);
+            return false;
+        }
+
+        return false;
     }
 }
+
