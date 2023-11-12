@@ -43,7 +43,23 @@ public class WaterUsageRepository : IWaterUsageRepository
     public async Task<WaterUsage> Add(int farmingCompanyId, WaterUsage usage)
     {
         var company = await _companies.Get(farmingCompanyId);
-
+        
+        // controlla se e' gia' stato registrato un WaterUsage nella stessa data di quello che si sta tentando di aggiungere
+        var last = await _usages.FirstOrDefaultAsync(u => u.FarmingCompanyId == company.Id && u.Timestamp.Date == usage.Timestamp.Date);
+        
+        if (last != null)
+        {
+            // se le date (considerando solo giorno/mese/anno) coincidono allora un WaterUsage e' gia' stato registrato oggi
+            last.Timestamp = usage.Timestamp;
+            last.ConsumedQuantity = usage.ConsumedQuantity;
+            
+            // si sovrascrivono i valori del WaterUsage gia' registrato (cambiano solo TimeStamp e ConsumedQuantity
+            _usages.Entry(last).CurrentValues.SetValues(last);
+            await _context.SaveChangesAsync();
+            //throw new DbUpdateException("can't register two usages for the same company the same day; overwriting the previous value");
+            return last;
+        }
+        
         usage.FarmingCompanyId = company.Id;
 
         await _usages.AddAsync(usage);

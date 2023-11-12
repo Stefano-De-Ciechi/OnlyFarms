@@ -499,7 +499,7 @@ void MapWaterUsageRoutes()
         var res = await repository.Add(companyId, usage);
         return ResourceCreated(fullRoute, res);
     })
-        .RequireAuthorization(Policy.IsFarmManager)
+        .RequireAuthorization(Policy.IsIotSubsystem)
         .Produces<WaterUsage>(201)
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
