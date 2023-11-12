@@ -40,16 +40,17 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
 
 def read_crop_data():
 
-    with open(os.path.join(file_path, crop_file_name), "r") as crop_file:
-        crop_data = json.load(crop_file)
+
 
         while True:
             if time_of_day in time_of_day_values:
+                with open(os.path.join(file_path, crop_file_name), "r") as crop_file:
+                    crop_data = json.load(crop_file)
 
                 value = crop_data[time_of_day][sensor_type]
                 measuring_unit = "C°" if sensor_type == "Temperature" else "%"
                 
-                print(f"read mesurement from crop: {value} {measuring_unit}")
+                print(f"read measurement from crop: {value} {measuring_unit}")
                 message = f"cropId={crop_id},sensorId={sensor_id},sensorType={sensor_type},value={value},measuringUnit={measuring_unit}"
                 
                 client.publish(
