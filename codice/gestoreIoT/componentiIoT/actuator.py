@@ -1,11 +1,16 @@
+import time
+
 import paho.mqtt.client as mqtt
 import os
+import json
 
 # ===== CONFIGURAZIONE =====
 # TODO assegnare in modo "statico" i valori di crop_id e actuator_id in base a quale attuatore nel DB si vuole emulare
 
 crop_id = 3          # nel DB e' una crop creata per test
 actuator_id = 2      # nel DB e' un attuatore creato per test
+
+sleep_interval = 10
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,7 +27,20 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
     print(f"received message on topic {msg.topic} :: {message}")
     
     # TODO inserire qui qualche tipo di visualizzazione dell'attuatore che si attiva, es. accendere lampadina sull'emulatore philips hue
-    # TODO inserire qui la modifica dei valori di umidita' sul file che emula il campo (in un loop che ogni tot. secondi aggiorna i valori nel file json)
+
+    with open('datiSensore.json', 'r') as file:
+        data = json.load(file)
+
+    if message == 'ON':
+        while True:
+            data['Mattina']['Humidity'] += 1
+            with open('datiSensore.json', "w+", encoding='utf-8') as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
+            print("Value increased")
+            time.sleep(sleep_interval)
+
+    elif message == 'OFF':
+        print("Value reached ideal")
 
     with open(os.path.join(file_path, "actuatorCommands.txt"), "a+") as output:
         # TODO se si hanno piu' emulatori di un sensore attivi si puo

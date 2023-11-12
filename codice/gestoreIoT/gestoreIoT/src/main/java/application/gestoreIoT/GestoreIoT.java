@@ -128,15 +128,17 @@ public class GestoreIoT implements MqttCallback {
             int idealHumidity = apiClient.getCropIdealHumidity(cropId);
             int currentHumidity = (Integer) values.get("value");
 
-            // TODO inserire qui la logica per attivare o disattivare i sensori
-            /* deve essere qualcosa tipo
-            if (values.get("sensorType").equals("Humidity") && values.get("value") < [umidita ideale] {
-                this.mqttClient.publish("crops/ + cropId + "/actuators/commands" con messaggio di stato "ON")     // facciamo che tutti gli attuatori della crop ricevano il comando
+            // logica per attivare o disattivare gli attuatori
+            if (values.get("sensorType").equals("Humidity") && (int)values.get("value") < idealHumidity) {
+                String command = "ON";
+                MqttMessage m = new MqttMessage(command.getBytes());
+                this.mqttClient.publish("crops/ + cropId + /actuators/commands", m);     // facciamo che tutti gli attuatori della crop ricevano il comando
+            } else if (values.get("sensorType").equals("Humidity") && (int)values.get("value") >= idealHumidity){
+                String command = "OFF";
+                MqttMessage m = new MqttMessage(command.getBytes());
+                this.mqttClient.publish("crops/ + cropId + /actuators/commands", m);
             }
-            else {
-                stessa cosa di sopra ma con messaggio "OFF"
-            }
-            */
+
 
             /* per essere sicuri che un attuatore abbia ricevuto un comando, si puo' fare come negli esempi del corso e fare in modo che l'attuatore rimandi indietro il comando ricevuto
             * e solo allora si puo' mandare la registrazione del comando alla Rest Api (serve un topic nuovo e il gestore deve ascoltare anche su quel topic) */
