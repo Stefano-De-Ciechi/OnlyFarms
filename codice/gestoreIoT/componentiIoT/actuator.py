@@ -8,9 +8,10 @@ import json
 # TODO assegnare in modo "statico" i valori di crop_id e actuator_id in base a quale attuatore nel DB si vuole emulare
 
 crop_id = 3          # nel DB e' una crop creata per test
-actuator_id = 2      # nel DB e' un attuatore creato per test
+actuator_id = 3      # nel DB e' un attuatore creato per test
 
 sleep_interval = 10
+active = False
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,6 +24,7 @@ def on_connect(client: mqtt.Client, userdata, flags, rc, properties=None):
     client.subscribe(topic=COMMANDS_TOPIC, qos=2)       # QualityOfService = 2 --> "Exactly one delivery" (verso il broker, no messaggi duplicati)
 
 def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
+    global active
     message = msg.payload.decode("utf-8")
     print(f"received message on topic {msg.topic} :: {message}")
     
@@ -31,16 +33,18 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
     with open('datiSensore.json', 'r') as file:
         data = json.load(file)
 
-    if message == 'ON':
-        while True:
+    while active:
+        if message == 'ON':
             data['Mattina']['Humidity'] += 1
             with open('datiSensore.json', "w+", encoding='utf-8') as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
             print("Value increased")
             time.sleep(sleep_interval)
+            active = True
 
-    elif message == 'OFF':
-        print("Value reached ideal")
+        elif message == 'OFF':
+            print("Value reached ideal: STOPPING")
+            active = False
 
     with open(os.path.join(file_path, "actuatorCommands.txt"), "a+") as output:
         # TODO se si hanno piu' emulatori di un sensore attivi si puo
