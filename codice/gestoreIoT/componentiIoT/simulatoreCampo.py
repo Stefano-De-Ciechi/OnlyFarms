@@ -19,7 +19,7 @@ def SetValues():
     pomeriggio_umidita = randint(45, 50)
     sera_temperatura = randint(17, 20)
     sera_umidita = randint(50, 55)
-    sera_acqua_rimanente = data["Sera"]["Acqua rimanente"]
+    #sera_acqua_rimanente = data["Sera"]["Acqua rimanente"]
 
     data.update({
         "Mattina": {
@@ -30,11 +30,7 @@ def SetValues():
             "Temperatura": pomeriggio_temperatura,
             "Umidita": pomeriggio_umidita
         },
-        "Sera": {
-            "Temperatura": sera_temperatura,
-            "Umidita": sera_umidita,
-            "Acqua rimanente": sera_acqua_rimanente
-        },
+        "WaterUsage" : 0    # ogni giorno l'utilizzo dell'acqua viene resettato
 
     })
     # scrittura sul file json, encoding e ensure ascii servono per stampare i caratteri speciali

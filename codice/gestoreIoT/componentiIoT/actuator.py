@@ -12,16 +12,26 @@ crop_id = 3          # nel DB e' una crop creata per test
 actuator_id = 2      # nel DB e' un attuatore creato per test
 
 sleep_interval = 10
+humidity_increment = 1
+water_usage_increment = 500
 
-file_path = os.path.dirname(os.path.abspath(__file__))
+crop_file_name = "datiSensore.json"
+commands_file_name = "actuatorCommands.txt"
 
 COMMANDS_TOPIC = f"crops/{crop_id}/actuators/commands"
 SYNC_TOPIC = "crops/components/sync"
+WATER_USAGE_TOPIC = f"crops/{crop_id}/waterUsages"
 
 # ==========================
 
+file_path = os.path.dirname(os.path.abspath(__file__))
+crop_file = os.path.join(file_path, crop_file_name)
+commands_file = os.path.join(file_path, commands_file_name)
+
 time_of_day_values = ["Mattina", "Pomeriggio", "Sera"]
 time_of_day = None
+
+waterUsageWasSent = False       # flag usato per inviare gli utilizzi di acqua una sola volta (quando time_of_day diventa "Sera")
 
 update_data = Event()
 stop_simulation = Event()
@@ -45,14 +55,12 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
         global time_of_day
         time_of_day = message
     
-    # TODO inserire qui qualche tipo di visualizzazione dell'attuatore che si attiva, es. accendere lampadina sull'emulatore philips hue
-    
     # ogni attuatore stampa il proprio stato sul file ogni volta che viene cambiato
-    with open(os.path.join(file_path, "actuatorCommands.txt"), "a+") as output:
-        output.write(f"actuator n.{actuator_id}: {str(message)}\n")
+    with open(os.path.join(file_path, commands_file), "a+") as output:
+        output.write(f"crop n. {crop_id} actuator n.{actuator_id}: {str(message)}\n")
 
     # attivazione / disattivazione attuatore
-    if time_of_day in time_of_day_values:
+    if time_of_day in time_of_day_values and time_of_day != "Sera":
 
         if message == 'ON':
             update_data.set()     # reset del valore del segnale
@@ -61,22 +69,51 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
             update_data.clear()
             print("reached ideal humidity value")
 
+    if time_of_day in time_of_day_values and time_of_day == "Sera":
+        if not update_data.is_set():
+            update_data.set()
+
+def read_water_usage() -> int:
+    with open(crop_file, 'r') as file:
+        data = json.load(file)
+        return int(data["WaterUsage"])
+
 def update_crop_data():
+    global waterUsageWasSent
+    
     while not stop_simulation.is_set():
 
         update_data.wait()      # e' come una sleep che attende di essere interrotta dal segnale
-        #sleep(sleep_interval)
+
+        if time_of_day in time_of_day_values and time_of_day == "Sera":
+
+            if not waterUsageWasSent:
+                msg = f"cropId={crop_id},waterUsage={read_water_usage()}"
+                client.publish(
+                    topic=WATER_USAGE_TOPIC,
+                    payload=msg,
+                    qos=2,
+                    retain=False
+                )
+
+                waterUsageWasSent = True    # non inviare piu' water usage per oggi
+
+            print("sleeping")
+            stop_simulation.wait(sleep_interval)
+            continue        # passa all'iterazione successiva del while
 
         if update_data.is_set() and not stop_simulation.is_set():
-            with open('datiSensore.json', 'r') as file:
+            with open(crop_file, 'r') as file:
                 data = json.load(file)
 
-            data[time_of_day]['Humidity'] += 1
-            
-            with open('datiSensore.json', "w+", encoding='utf-8') as f:
-                json.dump(data, f, indent=4, ensure_ascii=False)
+            if time_of_day != "Sera":
+                data[time_of_day]['Humidity'] += humidity_increment
+                data["WaterUsage"] += water_usage_increment
+                
+                with open(crop_file, "w+", encoding='utf-8') as f:
+                    json.dump(data, f, indent=4, ensure_ascii=False)
 
-            print(f"humidity value increased to {data[time_of_day]['Humidity']}")
+                print(f"humidity value increased to {data[time_of_day]['Humidity']}")
 
         stop_simulation.wait(sleep_interval)
 

@@ -50,6 +50,11 @@ def read_crop_data():
 
         while not stop_simulation.is_set():
             
+            if time_of_day in time_of_day_values and time_of_day == "Sera":
+                print("sleeping")
+                stop_simulation.wait(sleep_interval)
+                continue        # passa all'iterazione successiva del while
+
             if time_of_day in time_of_day_values:
                 with open(os.path.join(file_path, crop_file_name), "r") as crop_file:
                     crop_data = json.load(crop_file)

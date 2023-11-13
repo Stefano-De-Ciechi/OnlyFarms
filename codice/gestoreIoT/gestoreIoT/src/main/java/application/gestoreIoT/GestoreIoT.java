@@ -15,6 +15,7 @@ public class GestoreIoT implements MqttCallback {
     private MqttClient mqttClient;
     private final RestApiClient apiClient;
     private final HashMap<Integer, String> lastActuatorCommandPerCrop;
+    private final HashMap<Integer, Boolean> waterUsagePerCropWasSent;
 
     public GestoreIoT(int farmingCompanyId, String jwtToken) {
 
@@ -40,8 +41,13 @@ public class GestoreIoT implements MqttCallback {
 
             // i messaggi sul topic sono di questo tipo: {cropId=int,sensorId=int,sensorType=["Temperature" | "Humidity"],value=int,measuringUnit=["C°" | "%"]}
             String MEASUREMENTS_TOPIC = "crops/+/sensors/+/measurements";
+            String WATER_USAGES_TOPIC = "crops/+/waterUsages";
+
             this.mqttClient.subscribe(MEASUREMENTS_TOPIC);
             System.out.println("subscribed to topic " + MEASUREMENTS_TOPIC);
+
+            this.mqttClient.subscribe(WATER_USAGES_TOPIC);
+            System.out.println("subscribed to topic " + WATER_USAGES_TOPIC);
 
         } catch (MqttException e) {
             System.err.println("could not connect to broker with url = " + brokerUrl + "\ncheck if mosquitto is running on port 1883");
@@ -49,6 +55,7 @@ public class GestoreIoT implements MqttCallback {
         }
 
         this.lastActuatorCommandPerCrop = new HashMap<>();
+        this.waterUsagePerCropWasSent = new HashMap<>();
 
     }
 
@@ -183,6 +190,29 @@ public class GestoreIoT implements MqttCallback {
             }
         }
 
+        if (topic.matches("crops/\\d/waterUsages")) {
+            // values contiene: {cropId=int,waterUsage=int}
+            Map<String, Integer> values = parseWaterUsage(message);
+
+            if (values == null) {
+                System.err.println("received an invalid message format from topic: " + topic);
+                return;
+            }
+
+            int cropId = values.get("cropId");
+            int waterUsage = values.get("waterUsage");
+
+            // se un waterUsage non e' ancora stato inviato per oggi lo invia alla restApi
+            if (!waterUsagePerCropWasSent.containsKey(cropId)) {
+
+                if (!sendWaterUsageToApi(cropId, waterUsage)) {
+                    System.err.println("could not send waterUsage to Rest API, verify that the application is running on http://localhost:5234 and that you have a valid JwtToken");
+                    return;
+                }
+                waterUsagePerCropWasSent.put(cropId, true);
+            }
+        }
+
     }
 
     @Override
@@ -216,6 +246,33 @@ public class GestoreIoT implements MqttCallback {
             }
 
             result.put(key, typedValue);
+        }
+
+        return result;
+    }
+
+    public Map<String, Integer> parseWaterUsage(String message) {
+        Map<String, Integer> result = new HashMap<>();
+
+        String[] keyValuePairs = message.split(",");
+
+        for (String pair : keyValuePairs) {
+            String[] parts = pair.split("=");
+
+            if (parts.length != 2) {
+                return null;        // TODO gestire meglio? lanciare qualche eccezione di formato invalido
+            }
+
+            String key = parts[0];
+            String value = parts[1];
+
+            int intValue;
+
+            if (valueIsInteger(value)) {
+                intValue = Integer.parseInt(value);
+                result.put(key, intValue);
+            }
+
         }
 
         return result;
@@ -270,6 +327,15 @@ public class GestoreIoT implements MqttCallback {
         } catch (MqttException e) {
             System.err.println("could not send the mqtt sync message");
         }
+    }
+
+    private boolean sendWaterUsageToApi(int cropId, int waterUsage) {
+        if (!SEND_DATA_TO_REST_API) {
+            System.out.println("emulating a POST request to api with waterUsage = " + waterUsage);
+            return true;
+        }
+
+        return this.apiClient.sendWaterUsage(waterUsage);
     }
 
     public static void main(String[] args) {
