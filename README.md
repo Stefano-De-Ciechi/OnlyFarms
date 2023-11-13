@@ -47,3 +47,32 @@ le email da utilizzare sono:
 | farm2@test.com  | FarmManager | in attesa di attivazione dall'admin |
 | water1@test.com | WaterManager | attivo |
 | water2@test.com | WaterManager | attivo |
+
+
+
+# ===== PISSIR =====
+
+## Istruzioni per il setup
+
+### Cosa serve:
+- per poter eseguire il corretto funzionamento del progetto riguardante il gestoreIoT, occorre utilizzare la versione 17 di Java e la versione 11 o superiore di Python.
+
+### Setup iniziale:
+1) Clonare questa repository.
+2) Installare Eclipse Paho MQTT Python attraverso l'utilizzo del terminale e del comando: "pip install paho-mqtt".
+3) Successivamente sarà necessario installare e avviare il broker mosquitto. All'interno dei sistemi Windows si dovrà eseguire un download dal sito ufficiale "mosquitto.org", per quanto riguarda i sistemi macOS, l'installazione può avvenire attraverso l'utilizzo del terminale e del comando: "brew install mosquitto".
+4) Una volta che completati i passaggi precedenti sarà necessaria anche l'installazione di Maven. Quest'ultima avviene attraverso il download dal sito "Apache Maven" all'interno del quale vi sono presenti tutte le versioni per i diversi sistemi operativi. 
+Una volta completati questi passagi l'ambiente è pronto all'uso per il lancio dell'applicazione.
+
+### Esecuzione
+
+## Premessa: L'applicazione è stata sviluppata e testata all'interno dei sistemi Linux e masOS.
+
+1. Avviare mosquito attraverso l'utilizzo del comando "mosquitto" all'interno del terminale.
+2. Fare in modo che la Rest API sia attiva:
+   -Per attivarla seguire i passaggi:
+      - "cd codice/OnlyFarms/OnlyFarms.RestApi"
+      - "dotnet build"
+      - "dotnet run --launch-profile https"
+
+3. Infine avviare la classe GestoreIoT di Java e successivamente i file di Python seguendo le indicazioni da terminale.
