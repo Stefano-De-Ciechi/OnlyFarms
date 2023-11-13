@@ -66,7 +66,8 @@ Una volta completati questi passagi l'ambiente è pronto all'uso per il lancio d
 
 ### Esecuzione
 
-## Premessa: L'applicazione è stata sviluppata e testata all'interno dei sistemi Linux e masOS.
+## Premessa: 
+L'applicazione è stata sviluppata e testata all'interno dei sistemi Linux e masOS.
 
 1. Avviare mosquito attraverso l'utilizzo del comando "mosquitto" all'interno del terminale.
 2. Fare in modo che la Rest API sia attiva:
