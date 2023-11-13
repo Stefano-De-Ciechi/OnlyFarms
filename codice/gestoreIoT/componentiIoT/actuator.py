@@ -1,12 +1,10 @@
 import paho.mqtt.client as mqtt
 import os
 import json
-from time import sleep
-from sys import exit
-from threading import Event, Thread
+from sys import exit, argv
+from threading import Event
 
 # ===== CONFIGURAZIONE =====
-# TODO assegnare in modo "statico" i valori di crop_id e actuator_id in base a quale attuatore nel DB si vuole emulare
 
 crop_id = 3          # nel DB e' una crop creata per test
 actuator_id = 2      # nel DB e' un attuatore creato per test
@@ -19,6 +17,7 @@ crop_file_name = "datiSensore.json"
 commands_file_name = "actuatorCommands.txt"
 
 COMMANDS_TOPIC = f"crops/{crop_id}/actuators/commands"
+COMMANDS_CONFIRMATION_TOPIC = f"crops/{crop_id}/actuators/commands-confirmation"
 SYNC_TOPIC = "crops/components/sync"
 WATER_USAGE_TOPIC = f"crops/{crop_id}/waterUsages"
 
@@ -54,6 +53,16 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
 
         global time_of_day
         time_of_day = message
+
+    # invia la conferma di ricezione del comando al gestore IoT
+    if msg.topic == COMMANDS_TOPIC and message in ["ON", "OFF"]:
+
+        client.publish(
+            topic=COMMANDS_CONFIRMATION_TOPIC,
+            payload=f"cropId={crop_id},actuatorId={actuator_id},command={message}",
+            qos=2,
+            retain=False
+        )
     
     # ogni attuatore stampa il proprio stato sul file ogni volta che viene cambiato
     with open(os.path.join(file_path, commands_file), "a+") as output:
@@ -89,6 +98,7 @@ def update_crop_data():
 
             if not waterUsageWasSent:
                 msg = f"cropId={crop_id},consumedQuantity={read_water_usage()}"
+                
                 client.publish(
                     topic=WATER_USAGE_TOPIC,
                     payload=msg,
@@ -122,6 +132,22 @@ def update_crop_data():
     print("\nclosing connection with the broker")
 
 if __name__ == "__main__":
+
+    # controlla subito se il file .json che emula il campo esiste o meno
+    if not os.path.exists(crop_file) or not os.path.isfile(crop_file):
+        print("can't find crop simulation file")
+        exit(-1)
+
+
+    if (len(argv) != 3):
+        print(f"no values passed from cli, using cropId={crop_id} and actuatorId={actuator_id}")
+    else:
+        crop_id = int(argv[1])
+        actuator_id = int(argv[2])
+        COMMANDS_TOPIC = f"crops/{crop_id}/actuators/commands"
+        COMMANDS_CONFIRMATION_TOPIC = f"crops/{crop_id}/actuators/commands-confirmation"
+        WATER_USAGE_TOPIC = f"crops/{crop_id}/waterUsages"
+        print(f"using values passed from cli, cropId={crop_id} and actuatorId={actuator_id}")
 
     client = mqtt.Client(
         client_id=f"emulatore attuatore n.{actuator_id} coltivazione n.{crop_id}", 

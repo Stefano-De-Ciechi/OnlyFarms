@@ -1,8 +1,7 @@
 import paho.mqtt.client as mqtt
 import os
 import json
-from time import sleep
-from sys import exit
+from sys import exit, argv
 from threading import Event
 
 # ===== CONFIGURAZIONE =====
@@ -86,6 +85,15 @@ if __name__ == "__main__":
     if not os.path.exists(crop_file) or not os.path.isfile(crop_file):
         print("can't find crop simulation file")
         exit(-1)
+
+    if (len(argv) != 4):
+        print(f"no values passed from cli, using cropId={crop_id}, sensorId={sensor_id}, sensorType={sensor_type}")
+    else:
+        crop_id = int(argv[1])
+        sensor_id = int(argv[2])
+        sensor_type = str(argv[3])
+        MEASUREMENTS_TOPIC = f"crops/{crop_id}/sensors/{sensor_id}/measurements"
+        print(f"using values passed from cli, cropId={crop_id}, sensorId={sensor_id}, sensorType={sensor_type}")
 
     client = mqtt.Client(
         client_id=f"emulatore sensore n.{sensor_id} coltivazione n.{crop_id}",

@@ -1,9 +1,0 @@
-crop n. 3 actuator n.2: Mattina
-crop n. 3 actuator n.2: ON
-crop n. 3 actuator n.2: OFF
-crop n. 3 actuator n.2: Pomeriggio
-crop n. 3 actuator n.2: ON
-crop n. 3 actuator n.2: OFF
-crop n. 3 actuator n.2: Sera
-crop n. 3 actuator n.2: Sera
-crop n. 3 actuator n.2: TURN_OFF

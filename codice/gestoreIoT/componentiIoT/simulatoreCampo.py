@@ -23,12 +23,12 @@ def SetValues():
 
     data.update({
         "Mattina": {
-            "Temperatura": mattina_temperatura,
-            "Umidita": mattina_umidita
+            "Temperature": mattina_temperatura,
+            "Humidity": mattina_umidita
         },
         "Pomeriggio": {
-            "Temperatura": pomeriggio_temperatura,
-            "Umidita": pomeriggio_umidita
+            "Temperature": pomeriggio_temperatura,
+            "Humidity": pomeriggio_umidita
         },
         "WaterUsage" : 0    # ogni giorno l'utilizzo dell'acqua viene resettato
 

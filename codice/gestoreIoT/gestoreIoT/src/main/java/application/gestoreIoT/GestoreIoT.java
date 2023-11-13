@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class GestoreIoT implements MqttCallback {
 
     // TODO rimuovere sta costante quando si esegue la demo
-    private static final boolean SEND_DATA_TO_REST_API = false;     // impostare a false per evitare di "intasare" il DB
+    private static final boolean SEND_DATA_TO_REST_API = true;     // impostare a false per evitare di "intasare" il DB
     private MqttClient mqttClient;
     private final RestApiClient apiClient;
     private final HashMap<Integer, String> lastActuatorCommandPerCrop;
@@ -42,12 +42,16 @@ public class GestoreIoT implements MqttCallback {
             // i messaggi sul topic sono di questo tipo: {cropId=int,sensorId=int,sensorType=["Temperature" | "Humidity"],value=int,measuringUnit=["C°" | "%"]}
             String MEASUREMENTS_TOPIC = "crops/+/sensors/+/measurements";
             String WATER_USAGES_TOPIC = "crops/+/waterUsages";
+            String COMMANDS_CONFIRMATION_TOPIC = "crops/+/actuators/commands-confirmation";
 
             this.mqttClient.subscribe(MEASUREMENTS_TOPIC);
             System.out.println("subscribed to topic " + MEASUREMENTS_TOPIC);
 
             this.mqttClient.subscribe(WATER_USAGES_TOPIC);
             System.out.println("subscribed to topic " + WATER_USAGES_TOPIC);
+
+            this.mqttClient.subscribe(COMMANDS_CONFIRMATION_TOPIC);
+            System.out.println("subscribed to topic " + COMMANDS_CONFIRMATION_TOPIC);
 
         } catch (MqttException e) {
             System.err.println("could not connect to broker with url = " + brokerUrl + "\ncheck if mosquitto is running on port 1883");
@@ -119,11 +123,12 @@ public class GestoreIoT implements MqttCallback {
 
         System.out.println("received message:" + message + " on topic: " + topic);
 
-        if (topic.matches("crops/\\d/sensors/\\d/measurements")) {      // qui ho dovuto usare una regular expression per poter comprendere tutti i topic con lo stesso formato ma valori numerici diversi; \\d indica un qualunque numero
+        Map<String, Object> values = parseMessageValues(message);       // per accedere ai valori usare values.get("sensorId") o values.get("value") ecc., necessario fare un cast ad Integer o String
 
-            // values contiene: {cropId=int,sensorId=int,sensorType=["Temperature" | "Humidity"],value=int,measuringUnit=["C°" | "%"]}
-            Map<String, Object> values = parseSensorMeasurement(message);       // per accedere ai valori usare values.get("sensorId") o values.get("value") ecc., necessario fare un cast ad Integer o String
+        // qui ho dovuto usare una regular expression per poter comprendere tutti i topic con lo stesso formato ma valori numerici diversi; \\d indica un qualunque numero
+        if (topic.matches("crops/\\d/sensors/\\d/measurements")) {
 
+            // qui values contiene: {cropId=int,sensorId=int,sensorType=["Temperature" | "Humidity"],value=int,measuringUnit=["C°" | "%"]}
             if (values == null) {
                 System.err.println("received an invalid message format from topic: " + topic);
                 return;
@@ -147,18 +152,6 @@ public class GestoreIoT implements MqttCallback {
             String sensorType = (String) values.get("sensorType");
             String command;
 
-            /*
-            // logica per attivare o disattivare gli attuatori
-            if (sensorType.equals("Humidity") && currentHumidity < idealHumidity) {
-                command = "ON";
-                MqttMessage m = new MqttMessage(command.getBytes());
-                this.mqttClient.publish("crops/ + cropId + /actuators/commands", m);     // facciamo che tutti gli attuatori della crop ricevano il comando
-            } else if (sensorType.equals("Humidity") && currentHumidity >= idealHumidity) {
-                command = "OFF";
-                MqttMessage m = new MqttMessage(command.getBytes());
-                this.mqttClient.publish("crops/ + cropId + /actuators/commands", m);
-            }*/
-
             // logica per attivare o disattivare gli attuatori (publish sul topic "crops/+/actuators/commands" di un comando "ON" o "OFF")
             if (sensorType.equals("Humidity")) {
                 MqttMessage m;
@@ -166,7 +159,7 @@ public class GestoreIoT implements MqttCallback {
 
                 if (lastActuatorCommandPerCrop.containsKey(cropId)) {
 
-                    /* lastActuatorCommandPerCrop immagazzina l'ultimo comando ricevuto, se il nuovo comando e' uguale al precedente non lo si invia */
+                    // lastActuatorCommandPerCrop immagazzina l'ultimo comando ricevuto, se il nuovo comando e' uguale al precedente non lo si invia (cosi' si evitano messaggi duplicati anche nel DB)
                     if (!lastActuatorCommandPerCrop.get(cropId).equals(command)) {
                         lastActuatorCommandPerCrop.put(cropId, command);
                         m = new MqttMessage(command.getBytes());
@@ -181,26 +174,17 @@ public class GestoreIoT implements MqttCallback {
 
             }
 
-            /* per essere sicuri che un attuatore abbia ricevuto un comando, si puo' fare come negli esempi del corso e fare in modo che l'attuatore rimandi indietro il comando ricevuto
-            * e solo allora si puo' mandare la registrazione del comando alla Rest Api (serve un topic nuovo e il gestore deve ascoltare anche su quel topic) */
-
-            // chiamata alla RestApi per registrare il comando mandato all'attuatore
-            if (!sendCommandToAllActuatorsToAPi(cropId, "" /* TODO qua passare il comando "ricevuto indietro" dall'attuatore */)) {
-                System.err.println("could not send command to Rest API, verify that the application is running on http://localhost:5234 and that you have a valid JwtToken");
-            }
         }
 
         if (topic.matches("crops/\\d/waterUsages")) {
-            // values contiene: {cropId=int,waterUsage=int}
-            Map<String, Integer> values = parseWaterUsage(message);
-
+            // qui values contiene: {cropId=int,waterUsage=int}
             if (values == null) {
                 System.err.println("received an invalid message format from topic: " + topic);
                 return;
             }
 
-            int cropId = values.get("cropId");
-            int waterUsage = values.get("consumedQuantity");
+            int cropId = (int) values.get("cropId");
+            int waterUsage = (int) values.get("consumedQuantity");
 
             // se un waterUsage non e' ancora stato inviato per oggi lo invia alla restApi
             if (!waterUsagePerCropWasSent.containsKey(cropId)) {
@@ -213,6 +197,29 @@ public class GestoreIoT implements MqttCallback {
             }
         }
 
+        /* questo topic e' usato per confermare la ricezione di un comando da parte di un attuatore (il comando viene rispedito al gestore IoT, e al suo arrivo viene anche registrato nel DB con una chiamata alla rest api */
+        if (topic.matches("crops/\\d/actuators/commands-confirmation")) {
+
+            // qui values contiene {cropId=int,actuatorId=int,command=String}
+            if (values == null) {
+                System.err.println("received an invalid message format from topic: " + topic);
+                return;
+            }
+
+            int cropId = (int) values.get("cropId");
+            int actuatorId = (int) values.get("actuatorId");
+            String command = (String) values.get("command");
+
+            if (!lastActuatorCommandPerCrop.get(cropId).equals(command)) {
+                System.err.println("mismatch between command previously sent and confirmation received; try to reset the simulation");
+                return;
+            }
+
+            // chiamata alla RestApi per registrare il comando mandato all'attuatore
+            if (!sendActuatorCommandToApi(cropId, actuatorId, command)) {
+                System.err.println("could not send command to Rest API, verify that the application is running on http://localhost:5234 and that you have a valid JwtToken");
+            }
+        }
     }
 
     @Override
@@ -220,7 +227,7 @@ public class GestoreIoT implements MqttCallback {
 
     }
 
-    private Map<String, Object> parseSensorMeasurement(String message) {
+    private Map<String, Object> parseMessageValues(String message) {
         // message e' una stringa con il seguente formato:      {cropId=int,sensorId=int,sensorType=["Temperature" | "Humidity"],value=int,measuringUnit=["C°" | "%"]}
         Map<String, Object> result = new HashMap<>();
 
@@ -251,33 +258,6 @@ public class GestoreIoT implements MqttCallback {
         return result;
     }
 
-    public Map<String, Integer> parseWaterUsage(String message) {
-        Map<String, Integer> result = new HashMap<>();
-
-        String[] keyValuePairs = message.split(",");
-
-        for (String pair : keyValuePairs) {
-            String[] parts = pair.split("=");
-
-            if (parts.length != 2) {
-                return null;        // TODO gestire meglio? lanciare qualche eccezione di formato invalido
-            }
-
-            String key = parts[0];
-            String value = parts[1];
-
-            int intValue;
-
-            if (valueIsInteger(value)) {
-                intValue = Integer.parseInt(value);
-                result.put(key, intValue);
-            }
-
-        }
-
-        return result;
-    }
-
     private static boolean valueIsInteger(String value) {
         try {
             Integer.parseInt(value);
@@ -293,7 +273,7 @@ public class GestoreIoT implements MqttCallback {
 
     private boolean sendSensorMeasurementToApi(Map<String, Object> values) {
         if (!SEND_DATA_TO_REST_API) {
-            System.out.println("emulating a POST request to api with body: " + values);
+            System.out.println("emulating a POST request to api for sensor measurement with body: " + values);
             return true;
         }
 
@@ -308,6 +288,15 @@ public class GestoreIoT implements MqttCallback {
     private boolean sendCommandToAllActuatorsToAPi(int cropId, String command) {
         if (!SEND_DATA_TO_REST_API) {
             System.out.println("emulating a POST request to api with command = " + command);
+            return true;
+        }
+
+        return this.apiClient.sendCommandToAllActuators(cropId, command);
+    }
+
+    private boolean sendActuatorCommandToApi(int cropId, int actuatorId, String command) {
+        if (!SEND_DATA_TO_REST_API) {
+            System.out.println("emulating a POST request to api for actuator " + actuatorId + " with command = " + command);
             return true;
         }
 
@@ -339,7 +328,7 @@ public class GestoreIoT implements MqttCallback {
     }
 
     public static void main(String[] args) {
-        GestoreIoT gestoreIoT = new GestoreIoT(3, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6Ijg3MjEwYjViLTZkZDgtNDQxYy1hNzhiLWUyZDJiYTBjZTAyYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJmYXJtMUB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImZhcm0xQHRlc3QuY29tIiwiQXNwTmV0LklkZW50aXR5LlNlY3VyaXR5U3RhbXAiOiJBRUpYREU0SkhaNE9VWjUyQkhZN0VSRFJLSlI3RTZWNyIsImFtciI6InB3ZCIsIlJvbGVzIjoiaW90U3ViU3lzdGVtIiwiZXhwIjoxNzMxMTczMDAxfQ.tLgiuzypgfRiNqKe8gjyvColE50Xnxfj6jKkY1wZUI8");    // nel DB, farmingCompanyId=3 fa riferimento ad una farmingCompany creata per eseguire test
+        GestoreIoT gestoreIoT = new GestoreIoT(1, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6Ijg3MjEwYjViLTZkZDgtNDQxYy1hNzhiLWUyZDJiYTBjZTAyYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJmYXJtMUB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImZhcm0xQHRlc3QuY29tIiwiQXNwTmV0LklkZW50aXR5LlNlY3VyaXR5U3RhbXAiOiJBRUpYREU0SkhaNE9VWjUyQkhZN0VSRFJLSlI3RTZWNyIsImFtciI6InB3ZCIsIlJvbGVzIjoiaW90U3ViU3lzdGVtIiwiZXhwIjoxNzMxMTczMDAxfQ.tLgiuzypgfRiNqKe8gjyvColE50Xnxfj6jKkY1wZUI8");    // nel DB, farmingCompanyId=3 fa riferimento ad una farmingCompany creata per eseguire test
         gestoreIoT.showMenu();
     }
 }
