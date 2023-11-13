@@ -132,11 +132,11 @@ public class GestoreIoT implements MqttCallback {
             if (values.get("sensorType").equals("Humidity") && (int)values.get("value") < idealHumidity) {
                 String command = "ON";
                 MqttMessage m = new MqttMessage(command.getBytes());
-                this.mqttClient.publish("crops/ + cropId + /actuators/commands", m);     // facciamo che tutti gli attuatori della crop ricevano il comando
+                this.mqttClient.publish("crops/" + cropId + "/actuators/commands", m);     // facciamo che tutti gli attuatori della crop ricevano il comando
             } else if (values.get("sensorType").equals("Humidity") && (int)values.get("value") >= idealHumidity){
                 String command = "OFF";
                 MqttMessage m = new MqttMessage(command.getBytes());
-                this.mqttClient.publish("crops/ + cropId + /actuators/commands", m);
+                this.mqttClient.publish("crops/" + cropId + "/actuators/commands", m);
             }
 
 
