@@ -17,7 +17,7 @@ Caso d'uso: Accesso al sistema - Login
 Estensioni:
 
 3.1	se l'utente non è registrato viene reindirizzato sulla pagina di registrazione alla piattaforma
-3.2	se l'utente era stato bloccato da un amministratore del sistema viene mostrata una pagina di errore
+3.2	se l'utente non e' ancora stato confermato da un amministratore del sistema viene mostrata una pagina informativa
 
 -------------------------------------------------------------------------------
 
@@ -39,10 +39,6 @@ Estensioni:
 4.2	se la registrazione ha successo, l'utente viene reindirizzato alla pagina di Accesso - Login
 4.3	se la registrazione fallisce viene mostrato un messaggio con eventuali errori
 
-Note:
-	gli utenti, una volta registrati, ed indipendentemente dal proprio tipo, non possiedono nessuna 
-	autorizzazione, che deve essergli assegnata da un utente amministratore
-
 -------------------------------------------------------------------------------
 
 Attore: Utente Amministratore del sistema
@@ -50,47 +46,27 @@ Caso d'uso: Gestione Utenti del sistema
 
 1.	l'amministratore chiede di visualizzare l'elenco di utenti registrati al sistema
 
-2.	l'amministratore sceglie l'azione da compiere: Concedi o Rimuovi autorizzazioni ad un utente 
-	oppure rimuovi utente dal sistema
-	
-Estensioni:
-
-2.1	concessione di autorizzazioni: l'amministratore definisce le autorizzazioni da garantire ad
-	un determinato utente in base al suo tipo (Gestore Idrico o Gestore Agricolo)
-
-2.2	rimozione di autorizzazioni: l'amministratore visualizza e rimuove le autorizzazioni precedentemente
-	concesse ad un utente registrato
-	
-2.3	rimozione di un utente:	l'amministrazione sceglie l'utente da rimuovere; viene richiesta conferma
-	dell'eliminazione ed in caso affermativo i dati vengono cancellati
+2.	l'amministratore sceglie l'azione da compiere: Accettare o meno un utente al sistema
 	
 -------------------------------------------------------------------------------
 
 Attore: Gestore Agricolo
-Caso d'uso: Gestione delle prenotazioni idriche di un'azienda agricola
+Caso d'uso: Visualizza storico Prenotazioni
 
-1.	il gestore chiede di visualizzare l'elenco di aziende idriche disponibili ad erogare un servizio 
-	di rifornimento idrico e ne sceglie una
+1.	il gestore chiede di visualizzare l'elenco di prenotazioni di acqua attive / effettuate in passato
 
-2.	il gestore effettua una prenotazione inserendo la quantità di acqua che vorrebbe ricevere
+2.	il gestore può effettuare una nuova prenotazione selezionando un'azienda idrica tra quelle disponibili
+	ed inserendo una quantita' di acqua e un prezzo di offerta
 
 3.	la prenotazione può essere accettata oppure rifiutata
 
-4.	se la prenotazione viene accettata entra in vigore dal giorno successivo e la si salva nello 
-	storico prenotazioni
+4.	se la prenotazione viene accettata, quella corrente viene "spostata" nello storico prenotazioni
 
-5.	il gestore può richiedere di visualizzare lo storico delle prenotazioni ed eseguire delle operazioni
-	sull'ultima prenotazione (quella corrente): aggiornamento o cancellazione
+5.	il gestore può cancellare le prenotazioni correntemente attive
 
 Estensioni:
 
 2.1	prima di effettuare una prenotazione il gestore può eseguire una stima basandosi sulle misurazioni
-	ottenute dai sensori della propria azienda e può affidarsi al servizio meteo offerto direttamente
-	dalla piattaforma
-
-5.1	aggiornamento di una prenotazione: il gestore inserisce il dato aggiornato sulla quantità di acqua,
-	l'aggiornamento può essere accettato oppure rifiutato, se accettato la nuova prenotazione entra
-	in vigore dal giorno successivo e viene salvata nello storico prenotazioni
 	
 5.2	cancellazione di una prenotazione: il gestore interrompe il servizio di rifornimento idrico
 	attualmente in corso con una data azienda
@@ -102,8 +78,8 @@ Caso d'uso: Gestione delle coltivazioni di un'azienda agricola
 
 1.	il gestore chiede di visualizzare l'elenco delle coltivazioni della sua azienda
 
-2.	il gestore sceglie l'azione da compiere: nuovo inserimendo, modifica o rimozione (nel secondo
-	e terzo caso deve anche selezionare una delle coltivazioni)
+2.	il gestore sceglie l'azione da compiere: nuovo inserimendo o rimozione (nel secondo
+	caso deve anche selezionare una delle coltivazioni)
 
 Estensioni:
 
@@ -111,10 +87,7 @@ Estensioni:
 	umidità ideale, tipo di irrigazione). Dopo una conferma i dati della nuova coltivazione vengono
 	registrati
 	
-2.2	modifica: al gestore viene mostrata una scheda con i dati della coltivazione e può modificare
-	i vari campi. Al termine deve confermare le modifiche ed i nuovi dati vengono registrati
-
-2.3	rimozione: viene chiesta conferma dell'eliminazione ed in caso affermativo i dati vengono cancellati
+2.2	rimozione: viene chiesta conferma dell'eliminazione ed in caso affermativo i dati vengono cancellati
 
 --------------------------------------------------------------------------------
 
@@ -230,5 +203,4 @@ Caso d'uso: Ricezione Comandi
 Estensioni:
 
 3.1	ogni informazione registrata deve riportare un timestamp
-
 

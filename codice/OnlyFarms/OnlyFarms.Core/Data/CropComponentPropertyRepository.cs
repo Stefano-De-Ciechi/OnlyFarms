@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+
 namespace OnlyFarms.Core.Data;
 
 // C e' il tipo del componente (Attuatore o Sensore), CP e' il tipo della proprieta' del componente (Command o Measurement)
@@ -54,6 +56,34 @@ public class CropComponentPropertyRepository<C, CP> : ICropComponentPropertyRepo
         await _context.SaveChangesAsync();
 
         return property;
+    }
+
+    public async Task AddToAllComponents(int farmingCompanyId, int cropId, CP property)
+    {
+        // metodo valido solo per oggetti di tipo Command degli Actuator
+        if (typeof(C) == typeof(Measurement))
+        {
+            throw new UnsupportedContentTypeException("this endpoint is not supported for Measurement objects");
+        }
+        
+        // metodo per assegnare a tutti gli attuatori di una crop lo stesso comando
+        var actuators = _components.GetAll(farmingCompanyId, cropId);
+
+        var tmp = (property as Command)!;
+        foreach (var actuator in actuators.ToBlockingEnumerable())
+        {
+            /* spiegazione: serve creare un nuovo comando con la copia dei valori ricevuti dal body della request, perche' ad ogni add
+               i valori tipo Id, ComponentId ecc. vengono automaticamente fillati da EntityFramework, e se si prova a ri-usare lo stesso
+               oggetto (che ha il valore Id uguale al precedente) si ottiene una Eccezione SQL sulla violazione del constraint sulla
+               unicita' del valore di Id 
+            */
+            var command = new Command()
+            {
+                State = tmp.State,
+                Timestamp = tmp.Timestamp
+            };
+            await Add(actuator.FarmingCompanyId, actuator.CropId, actuator.Id, (command as CP)!);
+        }
     }
     
 }

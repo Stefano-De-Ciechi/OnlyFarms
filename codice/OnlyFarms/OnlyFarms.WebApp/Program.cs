@@ -111,7 +111,7 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     services.AddScoped<ICropComponentRepository<Sensor>>(serviceProvider => new CropComponentRepository<Sensor>(GetService<DataContext>(serviceProvider), GetService<ICropRepository>(serviceProvider)));
     services.AddScoped<ICropComponentPropertyRepository<Command>>(serviceProvider => new CropComponentPropertyRepository<Actuator, Command>(GetService<DataContext>(serviceProvider), GetService<ICropComponentRepository<Actuator>>(serviceProvider)));
     services.AddScoped<ICropComponentPropertyRepository<Measurement>>(serviceProvider => new CropComponentPropertyRepository<Sensor, Measurement>(GetService<DataContext>(serviceProvider), GetService<ICropComponentRepository<Sensor>>(serviceProvider)));
-    services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(GetService<DataContext>(serviceProvider), GetService<ICompanyRepository<FarmingCompany>>(serviceProvider)));
+    services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(GetService<DataContext>(serviceProvider), GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICropRepository>(serviceProvider)));
     services.AddScoped<IReservationRepository>(serviceProvider => new ReservationRepository(GetService<DataContext>(serviceProvider), GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
     services.AddScoped<IWaterLimitRepository>(serviceProvider => new WaterLimitRepository(GetService<DataContext>(serviceProvider), GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
 

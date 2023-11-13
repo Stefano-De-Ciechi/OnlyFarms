@@ -4,7 +4,7 @@ public class WaterCompany : ICompany      // entita' Azienda Idrica
 {
     public int Id { get; set; }
     public required string Name { get; set; }
-    public required string City { get; set; }       // TODO aggiungere il campo citta' ai diagrammi UML
+    public required string City { get; set; }
     public required string Address { get; set; }
     
     public required int WaterSupply { get; set; }

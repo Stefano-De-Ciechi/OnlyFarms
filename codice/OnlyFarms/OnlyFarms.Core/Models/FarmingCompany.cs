@@ -10,7 +10,7 @@ public class FarmingCompany : ICompany      // entita' Azienda Agricola
 {
     public int Id { get; set; }
     public required string Name { get; set; }
-    public required string City { get; set; }       // TODO aggiungere citta' ai diagrammi UML
+    public required string City { get; set; }
     public required string Address { get; set; }
     public int WaterSupply { get; set; } = 0;     // waterSupply viene usato come quantita' totale di acqua necessaria per tutte le coltivazioni dell'azienda
     public string UniqueCompanyCode { get; init; } = Guid.NewGuid().ToString();     // da usare durante la fase di registrazione (ogni utente inserisce il codice della propria azienda)

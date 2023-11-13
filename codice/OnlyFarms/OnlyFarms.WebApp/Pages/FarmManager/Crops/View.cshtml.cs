@@ -1,3 +1,4 @@
+using System.Collections;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,7 @@ public class View : BasePageModel
     public Crop Crop { get; set; }
     public IEnumerable<Actuator> Actuators { get; set; }
     public IEnumerable<Sensor> Sensors { get; set; }
+    public IEnumerable<WaterUsage> WaterUsages { get; set; }
     
     [BindProperty]
     public Actuator Actuator { get; set; }
@@ -22,7 +24,9 @@ public class View : BasePageModel
     private readonly ICropComponentPropertyRepository<Command> _commands;
     private readonly ICropComponentPropertyRepository<Measurement> _measures;
     
-    public View(ICropRepository crops, ICropComponentRepository<Actuator> actuators, ICropComponentRepository<Sensor> sensors, ICropComponentPropertyRepository<Command> commands, ICropComponentPropertyRepository<Measurement> measures)
+    private readonly IWaterUsageRepository _waterUsages;
+    
+    public View(ICropRepository crops, ICropComponentRepository<Actuator> actuators, ICropComponentRepository<Sensor> sensors, ICropComponentPropertyRepository<Command> commands, ICropComponentPropertyRepository<Measurement> measures, IWaterUsageRepository waterUsages)
         : base(crops)
     {
         _actuators = actuators;
@@ -30,6 +34,9 @@ public class View : BasePageModel
 
         _commands = commands;
         _measures = measures;
+
+        _waterUsages = waterUsages;
+
     }
     
     public async Task<IActionResult> OnGet(int farmingCompanyId, int cropId)
@@ -38,6 +45,8 @@ public class View : BasePageModel
         Actuators = _actuators.GetAll(farmingCompanyId, cropId).ToBlockingEnumerable();
         Sensors = _sensors.GetAll(farmingCompanyId, cropId).ToBlockingEnumerable();
 
+        WaterUsages = _waterUsages.GetAllByCrop(farmingCompanyId, cropId, null, null).ToBlockingEnumerable();
+        
         return Page();
     }
 

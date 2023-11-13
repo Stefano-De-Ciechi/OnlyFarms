@@ -4,7 +4,7 @@ public record Command : IHasId, ICropComponentProperty       // entita' Comando 
 {
     public int Id { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.Now;
-    public required string State { get; set; }      // TODO modificare nei diagrammi il tipo di State da boolean a string ?    // indica se l'attuatore è attivo o no
+    public required string State { get; set; }
 
     /*
      * Spiegazione: nella REST API, gli endpoint di Command e Measurement sono molto simili tra loro, ma uno agisce
