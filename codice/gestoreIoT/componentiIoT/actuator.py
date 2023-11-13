@@ -80,7 +80,7 @@ def read_water_usage() -> int:
 
 def update_crop_data():
     global waterUsageWasSent
-    
+
     while not stop_simulation.is_set():
 
         update_data.wait()      # e' come una sleep che attende di essere interrotta dal segnale
@@ -88,7 +88,7 @@ def update_crop_data():
         if time_of_day in time_of_day_values and time_of_day == "Sera":
 
             if not waterUsageWasSent:
-                msg = f"cropId={crop_id},waterUsage={read_water_usage()}"
+                msg = f"cropId={crop_id},consumedQuantity={read_water_usage()}"
                 client.publish(
                     topic=WATER_USAGE_TOPIC,
                     payload=msg,

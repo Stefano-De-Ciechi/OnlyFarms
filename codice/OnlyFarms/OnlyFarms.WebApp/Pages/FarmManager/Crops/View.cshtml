@@ -78,164 +78,199 @@
 
         </dl>
     
-    <div class="row">
-        <div class="col-6">
-            @* Crop Actuators table *@
-            <div class="container mt-4 pl-0">
-                <h1>Actuators</h1>
-                @if (Model.Actuators.Any())
-                {
-                    <table class="table table-dark table-striped">
-                        <thead>
-                        <tr>
-                            <th scope="col">ID</th>
-                            <th scope="col">TAG </th>
-                            <th scope="col">TYPE</th>
-                            <th scope="col">LATEST STATE</th>
+<div class="row">
+    <div class="col-6">
+        @* Crop Actuators table *@
+        <div class="container mt-4 pl-0">
+            <h1>Actuators</h1>
+            @if (Model.Actuators.Any())
+            {
+                <table class="table table-dark table-striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">TAG </th>
+                        <th scope="col">TYPE</th>
+                        <th scope="col">LATEST STATE</th>
 
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var actuator in Model.Actuators)
-                        {
-                            <tr>
-                                <td>@actuator.Id</td>
-                                <td>
-                                    <a asp-page="./CropComponents/Actuators/Index" asp-route-farmingCompanyId="@actuator.FarmingCompanyId" asp-route-cropId="@actuator.CropId" asp-route-actuatorId="@actuator.Id">
-                                        @actuator.Tag
-                                    </a>
-                                </td>
-                                <td>@actuator.ActuatorType</td>
-                                <td>@Model.GetLastCommand(@actuator.Id)</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var actuator in Model.Actuators)
+                    {
+                        <tr>
+                            <td>@actuator.Id</td>
+                            <td>
+                                <a asp-page="./CropComponents/Actuators/Index" asp-route-farmingCompanyId="@actuator.FarmingCompanyId" asp-route-cropId="@actuator.CropId" asp-route-actuatorId="@actuator.Id">
+                                    @actuator.Tag
+                                </a>
+                            </td>
+                            <td>@actuator.ActuatorType</td>
+                            <td>@Model.GetLastCommand(@actuator.Id)</td>
                                 
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                }
-                else
-                {
-                    <h5 class="text-danger">You haven't registered any actuator yet!</h5>
-                }
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <h5 class="text-danger">You haven't registered any actuator yet!</h5>
+            }
                 
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#actuatorModal">
-                    Register Actuator
-                </button>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#actuatorModal">
+                Register Actuator
+            </button>
                 
-                <div class="modal fade" id="actuatorModal" tabindex="-1" aria-labelledby="actuatorModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="actuatorModalLabel">Register new Actuator</h1>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <form asp-page-handler="actuator" method="post">
-                                <div class="modal-body">
-                                    
-                                    @* Actuator Type *@
-                                    <div class="input-group mb-3">
-                                        <label class="input-group-text" asp-for="Actuator.ActuatorType">Actuator Type</label>
-                                        <select asp-for="Actuator.ActuatorType" class="form-select" aria-required="true" required>
-                                            <option selected value="@ActuatorType.Sprinkler">@ActuatorType.Sprinkler.ToString()</option>
-                                        </select>
-                                    </div>
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text">Tag</span>
-                                        <input asp-for="Actuator.Tag" type="text" class="form-control" placeholder="ex. south sprinkler" required>
-                                        <span asp-validation-for="Actuator.Tag" class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    <button type="submit" class="btn btn-success">Register</button>
-                                </div>
-                            </form>
+            <div class="modal fade" id="actuatorModal" tabindex="-1" aria-labelledby="actuatorModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="actuatorModalLabel">Register new Actuator</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
+                        <form asp-page-handler="actuator" method="post">
+                            <div class="modal-body">
+                                    
+                                @* Actuator Type *@
+                                <div class="input-group mb-3">
+                                    <label class="input-group-text" asp-for="Actuator.ActuatorType">Actuator Type</label>
+                                    <select asp-for="Actuator.ActuatorType" class="form-select" aria-required="true" required>
+                                        <option selected value="@ActuatorType.Sprinkler">@ActuatorType.Sprinkler.ToString()</option>
+                                    </select>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">Tag</span>
+                                    <input asp-for="Actuator.Tag" type="text" class="form-control" placeholder="ex. south sprinkler" required>
+                                    <span asp-validation-for="Actuator.Tag" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-success">Register</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
         
         
-        <div class="col-6">
-            @* Crop Sensors table *@
-                <div class="container mt-4">
-                <h1>Sensors</h1>
-                    @if (Model.Sensors.Any())
-                    {
-                        <table class="table table-dark table-striped">
-                            <thead>
-                            <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">TAG </th>
-                                <th scope="col">TYPE</th>
-                                <th scope="col">LATEST MEASURE</th>
+    <div class="col-6">
+        @* Crop Sensors table *@
+        <div class="container mt-4">
+            <h1>Sensors</h1>
+            @if (Model.Sensors.Any())
+            {
+                <table class="table table-dark table-striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">TAG </th>
+                        <th scope="col">TYPE</th>
+                        <th scope="col">LATEST MEASURE</th>
 
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach (var sensor in Model.Sensors)
-                            {
-                                <tr>
-                                    <td>@sensor.Id</td>
-                                    <td>
-                                        <a asp-page="./CropComponents/Sensors/Index" asp-route-farmingCompanyId="@sensor.FarmingCompanyId" asp-route-cropId="@sensor.CropId" asp-route-sensorId="@sensor.Id">
-                                            @sensor.Tag
-                                        </a>
-                                    </td>
-                                    <td>@sensor.SensorType</td>
-                                    <td>@Model.GetLastMeasurement(@sensor.Id)</td>
-        
-                                </tr>
-                            }
-                            </tbody>
-                        </table>
-                    }
-                    else
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var sensor in Model.Sensors)
                     {
-                        <h5 class="text-danger">You haven't registered any sensors yet!</h5>
+                        <tr>
+                            <td>@sensor.Id</td>
+                            <td>
+                                <a asp-page="./CropComponents/Sensors/Index" asp-route-farmingCompanyId="@sensor.FarmingCompanyId" asp-route-cropId="@sensor.CropId" asp-route-sensorId="@sensor.Id">
+                                    @sensor.Tag
+                                </a>
+                            </td>
+                            <td>@sensor.SensorType</td>
+                            <td>@Model.GetLastMeasurement(@sensor.Id)</td>
+        
+                        </tr>
                     }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <h5 class="text-danger">You haven't registered any sensors yet!</h5>
+            }
                     
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#sensorModal">
-                        Register Sensor
-                    </button>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#sensorModal">
+                Register Sensor
+            </button>
                     
-                    <div class="modal fade" id="sensorModal" tabindex="-1" aria-labelledby="sensorModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="sensorModalLabel">Register new Sensor</h1>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <form asp-page-handler="sensor" method="post">
-                                    <div class="modal-body">
-                                        
-                                        @* Sensor Type *@
-                                        <div class="input-group mb-3">
-                                            <label class="input-group-text" asp-for="Sensor.SensorType">Actuator Type</label>
-                                            <select asp-for="Sensor.SensorType" class="form-select" aria-required="true" required>
-                                                <option selected value="@SensorType.Humidity">@SensorType.Humidity.ToString()</option>
-                                                <option value="@SensorType.Temperature">@SensorType.Temperature.ToString()</option>
-                                            </select>
-                                        </div>
-                                        <div class="input-group mb-3">
-                                            <span class="input-group-text" id="basic-addon2">Tag</span>
-                                            <input asp-for="Sensor.Tag" type="text" class="form-control" placeholder="ex. west humidity sensor" required>
-                                            <span asp-validation-for="Sensor.Tag" class="text-danger"></span>
-                                        </div>
-                                        
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        <button type="submit" class="btn btn-success">Register</button>
-                                    </div>
-                                </form>
-                            </div>
+            <div class="modal fade" id="sensorModal" tabindex="-1" aria-labelledby="sensorModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="sensorModalLabel">Register new Sensor</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
+                        <form asp-page-handler="sensor" method="post">
+                            <div class="modal-body">
+                                        
+                                @* Sensor Type *@
+                                <div class="input-group mb-3">
+                                    <label class="input-group-text" asp-for="Sensor.SensorType">Actuator Type</label>
+                                    <select asp-for="Sensor.SensorType" class="form-select" aria-required="true" required>
+                                        <option selected value="@SensorType.Humidity">@SensorType.Humidity.ToString()</option>
+                                        <option value="@SensorType.Temperature">@SensorType.Temperature.ToString()</option>
+                                    </select>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon2">Tag</span>
+                                    <input asp-for="Sensor.Tag" type="text" class="form-control" placeholder="ex. west humidity sensor" required>
+                                    <span asp-validation-for="Sensor.Tag" class="text-danger"></span>
+                                </div>
+                                        
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-success">Register</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
+        </div>
     </div>
+</div>
+
+<div class="row">
+    <div class="container mt-4">
+        <h1>Water Usage History</h1>
+
+        <h5>This page should be updated automatically by your IoT Subsystem</h5>
+            
+        @if (Model.WaterUsages.Any())
+        {
+            <table class="table table-dark table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">TIMESTAMP</th>
+                    <th scope="col">CONSUMED QUANTITY</th>
+    
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var usage in Model.WaterUsages)
+                {
+                    <tr>
+                        <td>@(usage.Timestamp.ToString("dd/MM/yyyy"))</td>
+                        <td>@($"{usage.ConsumedQuantity} liters")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <h5 class="text-danger">Your IoT Subsystem hasn't registered any water usage yet!</h5>
+        }
+    </div>
+
+</div>
     
 </div>
 

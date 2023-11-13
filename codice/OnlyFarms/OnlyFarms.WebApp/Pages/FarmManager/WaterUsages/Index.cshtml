@@ -37,7 +37,7 @@
             <thead>
             <tr>
                 <th scope="col">TIMESTAMP</th>
-                <th scope="col">CONSUMED QUANTITY</th>
+                <th scope="col">TOTAL CONSUMED QUANTITY</th>
 
             </tr>
             </thead>
@@ -45,7 +45,7 @@
             @foreach (var usage in Model.WaterUsages)
             {
                 <tr>
-                    <td>@(usage.Timestamp.ToString("dd/MM/yyyy"))</td>
+                    <td>@(usage.TimeStamp.ToString("dd/MM/yyyy"))</td>
                     <td>@($"{usage.ConsumedQuantity} liters")</td>
                 </tr>
             }

@@ -200,7 +200,7 @@ public class GestoreIoT implements MqttCallback {
             }
 
             int cropId = values.get("cropId");
-            int waterUsage = values.get("waterUsage");
+            int waterUsage = values.get("consumedQuantity");
 
             // se un waterUsage non e' ancora stato inviato per oggi lo invia alla restApi
             if (!waterUsagePerCropWasSent.containsKey(cropId)) {
@@ -335,7 +335,7 @@ public class GestoreIoT implements MqttCallback {
             return true;
         }
 
-        return this.apiClient.sendWaterUsage(waterUsage);
+        return this.apiClient.sendWaterUsage(cropId, waterUsage);
     }
 
     public static void main(String[] args) {

@@ -195,7 +195,7 @@ void InjectRepositories(IServiceCollection services, IConfiguration configuratio
     services.AddScoped<ICropComponentRepository<Sensor>>(serviceProvider => new CropComponentRepository<Sensor>(dataContext, GetService<ICropRepository>(serviceProvider)));
     services.AddScoped<ICropComponentPropertyRepository<Command>>(serviceProvider => new CropComponentPropertyRepository<Actuator, Command>(dataContext, GetService<ICropComponentRepository<Actuator>>(serviceProvider)));
     services.AddScoped<ICropComponentPropertyRepository<Measurement>>(serviceProvider => new CropComponentPropertyRepository<Sensor, Measurement>(dataContext, GetService<ICropComponentRepository<Sensor>>(serviceProvider)));
-    services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider)));
+    services.AddScoped<IWaterUsageRepository>(serviceProvider => new WaterUsageRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICropRepository>(serviceProvider)));
     services.AddScoped<IReservationRepository>(serviceProvider => new ReservationRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
     services.AddScoped<IWaterLimitRepository>(serviceProvider => new WaterLimitRepository(dataContext, GetService<ICompanyRepository<FarmingCompany>>(serviceProvider), GetService<ICompanyRepository<WaterCompany>>(serviceProvider)));
 }
@@ -460,7 +460,7 @@ void MapCropComponentsPropertiesRoutes<TC, TCp>(string routeName) where TC : cla
 
 void MapWaterUsageRoutes()
 {
-    const string fullRoute = $"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/waterUsages";
+    const string fullRoute = $"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/crops/waterUsages";
     var group = app.MapGroup(fullRoute)
         .WithTags("WaterUsages");
     
@@ -482,10 +482,10 @@ void MapWaterUsageRoutes()
         .Produces<ErrorMessage>(404);
 
     // GET single
-    group.MapGet("/{id:int}", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromRoute] int id) =>
+    group.MapGet("/{id:int}", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int id) =>
     {
-        var crop = await repository.Get(companyId, id);
-        return Results.Ok(crop);
+        var res = await repository.Get(id);
+        return Results.Ok(res);
     })
         .RequireAuthorization(Policy.IsAuthenticated)
         .Produces<WaterUsage>()
@@ -493,12 +493,28 @@ void MapWaterUsageRoutes()
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
     
-    // POST
-    group.MapPost("/", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromBody] WaterUsage usage) =>
+    // GET by cropId
+    app.MapGet($"{API_PREFIX}/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/waterUsages", async (
+        [FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromRoute] int cropId,
+        [FromQuery] DateTime? between, [FromQuery] DateTime? and) =>
     {
-        var res = await repository.Add(companyId, usage);
+        var res = repository.GetAllByCrop(companyId, cropId, between, and);
+        return Results.Ok(res);
+    })
+        .WithTags("WaterUsages")
+        .RequireAuthorization(Policy.IsAuthenticated)
+        .Produces<IAsyncEnumerable<WaterUsage>>()
+        .Produces<ErrorMessage>(401)
+        .Produces<ErrorMessage>(403)
+        .Produces<ErrorMessage>(404);
+    
+    // POST
+    app.MapPost($"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/waterUsages", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromBody] WaterUsage usage) =>
+    {
+        var res = await repository.Add(companyId, cropId, usage);
         return ResourceCreated(fullRoute, res);
     })
+        .WithTags("WaterUsages")
         .RequireAuthorization(Policy.IsIotSubsystem)
         .Produces<WaterUsage>(201)
         .Produces<ErrorMessage>(401)

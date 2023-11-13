@@ -39,6 +39,6 @@ public class AppTest
 
     @Test
     public void testPostWaterUsage() {
-        assertTrue(client.sendWaterUsage(5000));
+        assertTrue(client.sendWaterUsage(3,6000));
     }
 }

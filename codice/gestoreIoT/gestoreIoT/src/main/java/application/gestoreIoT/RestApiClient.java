@@ -182,14 +182,14 @@ public class RestApiClient {
        all url /api/v1/farmingCompanies/{farmingCompanyId}/waterUsages
        per registrare l'utilizzo di acqua del giorno corrente (se ne e' gia' stato inviato uno i suoi valori vengono sovrascritti
     */
-    public boolean sendWaterUsage(int consumedQuantity) {
+    public boolean sendWaterUsage(int cropId, int consumedQuantity) {
         RestTemplate client = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", "application/json");
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(jwtToken);
 
-        String url = "http://localhost:5234/api/v1/farmingCompanies/" + farmingCompanyId + "/waterUsages/";
+        String url = "http://localhost:5234/api/v1/farmingCompanies/" + farmingCompanyId + "/crops/" + cropId + "/waterUsages/";
 
         HashMap<String, Object> body = new HashMap<>();
         body.put("consumedQuantity", consumedQuantity);

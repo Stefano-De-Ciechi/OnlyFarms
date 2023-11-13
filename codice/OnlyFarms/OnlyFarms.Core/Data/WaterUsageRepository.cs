@@ -5,12 +5,14 @@ public class WaterUsageRepository : IWaterUsageRepository
     private readonly DataContext _context;
     private readonly DbSet<WaterUsage> _usages;
     private readonly ICompanyRepository<FarmingCompany> _companies;
+    private readonly ICropRepository _crops;
 
-    public WaterUsageRepository(DataContext context, ICompanyRepository<FarmingCompany> companies)
+    public WaterUsageRepository(DataContext context, ICompanyRepository<FarmingCompany> companies, ICropRepository crops)
     {
         _context = context;
         _usages = _context.Set<WaterUsage>();
         _companies = companies;
+        _crops = crops;
     }
 
     public async IAsyncEnumerable<WaterUsage> GetAll(int farmingCompanyId)
@@ -27,10 +29,27 @@ public class WaterUsageRepository : IWaterUsageRepository
         foreach (var w in _usages.Where(u => u.FarmingCompanyId == company.Id && u.Timestamp >= between && u.Timestamp <= and)) yield return w;
     }
 
-    public async Task<WaterUsage> Get(int farmingCompanyId, int id)
+    public async IAsyncEnumerable<WaterUsage> GetAllByCrop(int farmingCompanyId, int cropId, DateTime? between = null, DateTime? and = null)
     {
         var company = await _companies.Get(farmingCompanyId);
-        var res = await _usages.FirstOrDefaultAsync(u => u.Id == id && u.FarmingCompanyId == company.Id);
+        var crop = await _crops.Get(company.Id, cropId);
+
+        if (between == null)
+        {
+            foreach (var w in _usages.Where(u => u.FarmingCompanyId == company.Id && u.CropId == crop.Id)) yield return w;
+        }
+
+        else
+        {
+            and ??= DateTime.Now;
+            foreach (var w in _usages.Where(u => u.FarmingCompanyId == company.Id && u.CropId == crop.Id && u.Timestamp >= between && u.Timestamp <= and)) yield return w;
+        }
+    }
+
+    public async Task<WaterUsage> Get(int id)
+    {
+        //var company = await _companies.Get(farmingCompanyId);
+        var res = await _usages.FirstOrDefaultAsync(u => u.Id == id);
 
         if (res == null)
         {
@@ -40,12 +59,13 @@ public class WaterUsageRepository : IWaterUsageRepository
         return res;
     }
 
-    public async Task<WaterUsage> Add(int farmingCompanyId, WaterUsage usage)
+    public async Task<WaterUsage> Add(int farmingCompanyId, int cropId, WaterUsage usage)
     {
         var company = await _companies.Get(farmingCompanyId);
+        var crop = await _crops.Get(farmingCompanyId, cropId);
         
         // controlla se e' gia' stato registrato un WaterUsage nella stessa data di quello che si sta tentando di aggiungere
-        var last = await _usages.FirstOrDefaultAsync(u => u.FarmingCompanyId == company.Id && u.Timestamp.Date == usage.Timestamp.Date);
+        var last = await _usages.FirstOrDefaultAsync(u => u.FarmingCompanyId == company.Id && u.CropId == crop.Id && u.Timestamp.Date == usage.Timestamp.Date);
         
         if (last != null)
         {
@@ -61,10 +81,23 @@ public class WaterUsageRepository : IWaterUsageRepository
         }
         
         usage.FarmingCompanyId = company.Id;
+        usage.CropId = crop.Id;
 
         await _usages.AddAsync(usage);
         await _context.SaveChangesAsync();
 
         return usage;
+    }
+
+    public async Task<IEnumerable<(DateTime, int)>> GetTotalWaterUsage(int farmingCompanyId)
+    {
+        var company = await _companies.Get(farmingCompanyId);
+        var usages = GetAll(company.Id);
+
+        var result = usages.ToBlockingEnumerable()
+            .GroupBy(u => u.Timestamp.Date)
+            .Select(group => (group.Key, group.Sum(u => u.ConsumedQuantity)));
+
+        return result;
     }
 }
