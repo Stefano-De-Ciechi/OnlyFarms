@@ -2,7 +2,8 @@ import paho.mqtt.client as mqtt
 import os
 import json
 from time import sleep
-import threading
+from sys import exit
+from threading import Event
 
 # ===== CONFIGURAZIONE =====
 # TODO assegnare in modo "statico" i valori di crop_id e sensor_id in base a quale sensore nel DB si vuole emulare
@@ -15,7 +16,7 @@ crop_file_name = "datiSensore.json"     # nome del file che emula il campo
 sleep_interval = 10     # n. di secondi di pausa tra due letture di misurazioni dal campo / file + invio messaggio su mqtt
 
 MEASUREMENTS_TOPIC = f"crops/{crop_id}/sensors/{sensor_id}/measurements"
-SYNC_TOPIC = "crops/sensors/sync"      # topic usato per inviare una stringa di sincronizzazione che indica al sensore in quale parte della giornata ci si trovi
+SYNC_TOPIC = "crops/components/sync"      # topic usato per inviare una stringa di sincronizzazione che indica al sensore in quale parte della giornata ci si trovi
 
 # ==========================
 
@@ -24,6 +25,8 @@ crop_file = os.path.join(file_path, crop_file_name)
 
 time_of_day_values = ["Mattina", "Pomeriggio", "Sera"]
 time_of_day = None
+
+stop_simulation = Event()       # evento usato per terminare l'esecuzione del programma
 
 def on_connect(client: mqtt.Client, userdata, flags, rc, properties=None):
     print("sucessfully connected to broker")
@@ -34,15 +37,19 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
     print(f"received message on topic {msg.topic} :: {message}")
 
     if msg.topic == SYNC_TOPIC:
+
+        if message == "TURN_OFF":
+            print(f"\nending the simulation")
+            stop_simulation.set()       # interrompe il loop di read_crop_data() (ma solo al termine della prossima sleep)
+        
         global time_of_day
         time_of_day = message
 
 
 def read_crop_data():
 
-
-
-        while True:
+        while not stop_simulation.is_set():
+            
             if time_of_day in time_of_day_values:
                 with open(os.path.join(file_path, crop_file_name), "r") as crop_file:
                     crop_data = json.load(crop_file)
@@ -62,7 +69,11 @@ def read_crop_data():
 
                 print(f'published message "{message}" on topic: {MEASUREMENTS_TOPIC}')
 
-            sleep(sleep_interval)
+            stop_simulation.wait(sleep_interval)        # funziona come una sleep, ma puo' essere interrotta se l'evento viene "triggerato" con il metodo .set()
+
+        client.disconnect()
+        client.loop_stop()
+        print("\nclosing connection with the broker")
 
 if __name__ == "__main__":
 
@@ -88,10 +99,9 @@ if __name__ == "__main__":
             clean_start=True        # ignora la cronologia di messaggi inviati prima della connessione
         )
 
-        # esegue il client mqtt su un thread separato, la variabile client rimane comunque accessibile (e' possible chiamare il metodo client.publish)
-        client_thread = threading.Thread(target=client.loop_forever)
-        client_thread.start()
-
+        # loop_start esegue il client mqtt su un thread separato, la variabile client rimane comunque accessibile (e' possible chiamare il metodo client.publish)
+        client.loop_start()
+        
         # qui inizia il loop di lettura dei dati (l'oggetto client si puo' ancora usare e fa sempre riferimento al client mqtt)
         read_crop_data()
 
@@ -99,8 +109,7 @@ if __name__ == "__main__":
         print("could not connect to broker, verify that mosquitto is running on port 1883")
         exit(-1)
 
-    except (KeyboardInterrupt, SystemExit):     # TODO ogni tanto quando si interrompe il programma compare un errore del tipo "Exception ignored in: <module 'threading'>", ma il programma termina comunque e chiude tutte le connesioni
+    except KeyboardInterrupt:     # TODO ogni tanto quando si interrompe il programma compare un errore del tipo "Exception ignored in: <module 'threading'>", ma il programma termina comunque e chiude tutte le connesioni
         client.disconnect()
         client.loop_stop()
         print("\nclosing connection with the broker")
-

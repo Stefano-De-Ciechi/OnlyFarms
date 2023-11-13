@@ -12,31 +12,30 @@ import java.util.Map;
 
 public class RestApiClient {
     private final String apiUrl;
-    private final RestTemplate client;
-    private final HttpHeaders headers;
+    //private final HttpHeaders headers;
     private final Gson jsonConverter;
     private final int farmingCompanyId;
-
+    private final String jwtToken;
     private final String errorMessage = "check that the rest api is running on http://localhost:5234";
 
     public RestApiClient(int farmingCompanyId, String jwtToken) {
         this.farmingCompanyId = farmingCompanyId;
+        this.jwtToken = jwtToken;
 
         this.apiUrl = "http://localhost:5234/api/v1/farmingCompanies/" + farmingCompanyId + "/crops/";
 
-        this.client = new RestTemplate();
-        this.headers = new HttpHeaders();
         this.jsonConverter = new Gson();
-
-        this.headers.set("Accept", "application/json");
-        this.headers.setContentType(MediaType.APPLICATION_JSON);
-        this.headers.setBearerAuth(jwtToken);
     }
 
     /* esegue una GET request
        restituisce il valore "umidita' ideale" di una coltivazione dato il suo id
     */
     public int getCropIdealHumidity(int cropId) {
+        RestTemplate client = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        headers.setBearerAuth(jwtToken);
+
         String url = apiUrl + cropId + "/";
         int idealHumidity;
         HttpEntity<String> request = new HttpEntity<>(headers);
@@ -65,6 +64,12 @@ public class RestApiClient {
        all url /api/v1/farmingCompanies/{farmingCompanyId}/crops/{cropId}/sensors/{sensorId}/measurements
     */
     public boolean sendSensorMeasurement(int cropId, int sensorId, int value, String measuringUnit) {
+        RestTemplate client = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(jwtToken);
+
         String url = apiUrl + cropId + "/sensors/" + sensorId + "/measurements/";
 
         HashMap<String, Object> body = new HashMap<>();
@@ -101,6 +106,12 @@ public class RestApiClient {
        all url /api/v1/farmingCompanies/{farmingCompanyId}/crops/{cropId}/actuators/{actuatorId}/commands
     */
     public boolean sendActuatorCommand(int cropId, int actuatorId, String state) {
+        RestTemplate client = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(jwtToken);
+
         String url = apiUrl + cropId + "/actuators/" + actuatorId + "/commands/";
 
         HashMap<String, Object> body = new HashMap<>();
@@ -136,6 +147,12 @@ public class RestApiClient {
        cioe' un comando unico per tutti gli attuatori di una coltivazione
     */
     public boolean sendCommandToAllActuators(int cropId, String state) {
+        RestTemplate client = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(jwtToken);
+
         String url = apiUrl + cropId + "/actuators/commands/";      // endpoint per mandare lo stesso comando a tutti gli attuatori di una coltivazione
 
         HashMap<String, Object> body = new HashMap<>();
@@ -166,6 +183,12 @@ public class RestApiClient {
        per registrare l'utilizzo di acqua del giorno corrente (se ne e' gia' stato inviato uno i suoi valori vengono sovrascritti
     */
     public boolean sendWaterUsage(int consumedQuantity) {
+        RestTemplate client = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(jwtToken);
+
         String url = "http://localhost:5234/api/v1/farmingCompanies/" + farmingCompanyId + "/waterUsages/";
 
         HashMap<String, Object> body = new HashMap<>();

@@ -1,2 +1,11 @@
+actuator n.2: Mattina
 actuator n.2: ON
 actuator n.2: OFF
+actuator n.2: ON
+actuator n.2: OFF
+actuator n.2: Pomeriggio
+actuator n.2: ON
+actuator n.2: OFF
+actuator n.2: ON
+actuator n.2: OFF
+actuator n.2: TURN_OFF

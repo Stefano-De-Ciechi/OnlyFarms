@@ -1,11 +1,11 @@
 {
     "Mattina": {
         "Temperature": 8,
-        "Humidity": 44
+        "Humidity": 70
     },
     "Pomeriggio": {
         "Temperature": 25,
-        "Humidity": 48
+        "Humidity": 71
     },
     "Sera": {
         "Temperature": 18,
