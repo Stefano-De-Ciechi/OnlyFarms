@@ -4,6 +4,7 @@ public interface IReservationRepository
 {
     IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId);
     IAsyncEnumerable<Reservation> GetCurrentReservations(int farmingCompanyId);
+    int GetAvailableWaterSupply(int farmingCompanyId);
     Task<Reservation?> GetById(int reservationId);
     IAsyncEnumerable<Reservation> GetAll(int farmingCompanyId, int waterCompanyId, DateTime? between, DateTime? and);
     IAsyncEnumerable<Reservation> GetAllByWaterCompany(int waterCompanyId);

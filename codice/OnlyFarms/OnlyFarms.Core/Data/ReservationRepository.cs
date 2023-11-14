@@ -27,6 +27,14 @@ public class ReservationRepository : IReservationRepository
         foreach (var r in _reservations.Where(r => r.FarmingCompanyId == farmingCompany.Id && r.OnGoing == true)) yield return r;
     }
 
+    public int GetAvailableWaterSupply(int farmingCompanyId)
+    {
+        var activeReservations = GetCurrentReservations(farmingCompanyId).ToBlockingEnumerable();
+        var result = activeReservations.Sum(r => r.BookedQuantity);
+        
+        return result;
+    }
+
     public async Task<Reservation?> GetById(int reservationId)
     {
         //return await _reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.Accepted == false);

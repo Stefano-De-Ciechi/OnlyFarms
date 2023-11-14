@@ -21,6 +21,22 @@ public class AppTest
     }
 
     @Test
+    public void testGetTotalWaterUsage() {
+        RestApiClient tmpClient = new RestApiClient(1, jwtToken);
+        int expected = 18000;
+        int actual = tmpClient.getTotalWaterUsage("2023-11-06");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetTotalAvailableWater() {
+        RestApiClient tmpClient = new RestApiClient(1, jwtToken);
+        int expected = 14000;
+        int actual = tmpClient.getAvailableWaterSupply();
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void testPostActuatorCommand() {
         int testActuatorId = 2;
         assertTrue(client.sendActuatorCommand(testCropId, testActuatorId, "test ON"));

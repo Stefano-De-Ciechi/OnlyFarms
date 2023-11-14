@@ -74,7 +74,8 @@ builder.Services.AddAuthorizationBuilder()
     // Admin, FarmManager e WaterManager
     .AddPolicy(Policy.IsAuthenticated, policy =>
     {
-        policy.RequireAssertion(context => (context.User.HasClaim(nameof(Roles), Roles.Admin) || context.User.HasClaim(nameof(Roles), Roles.FarmManager) || context.User.HasClaim(nameof(Roles), Roles.WaterManager)));
+        //policy.RequireAssertion(context => (context.User.HasClaim(nameof(Roles), Roles.Admin) || context.User.HasClaim(nameof(Roles), Roles.FarmManager) || context.User.HasClaim(nameof(Roles), Roles.WaterManager)));
+        policy.RequireAssertion(context => (context.User.HasClaim(nameof(Roles), Roles.Admin) || context.User.HasClaim(nameof(Roles), Roles.FarmManager) || context.User.HasClaim(nameof(Roles), Roles.WaterManager) || context.User.HasClaim(nameof(Roles), Roles.IoTSubSystem)));
     })
     
     /*
@@ -508,6 +509,18 @@ void MapWaterUsageRoutes()
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);
     
+    // GET today total amount by farmingCompanyId
+    group.MapGet("/total", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromQuery] DateTime? day) =>
+    {
+        var res = await repository.GetTotalWaterUsage(companyId, day);
+        return Results.Ok(res);
+    })
+        .RequireAuthorization(Policy.IsAuthenticated)
+        .Produces<int>()
+        .Produces<ErrorMessage>(401)
+        .Produces<ErrorMessage>(403)
+        .Produces<ErrorMessage>(404);
+    
     // POST
     app.MapPost($"{ API_PREFIX }/farmingCompanies/{{companyId:int}}/crops/{{cropId:int}}/waterUsages", async ([FromServices] IWaterUsageRepository repository, [FromRoute] int companyId, [FromRoute] int cropId, [FromBody] WaterUsage usage) =>
     {
@@ -553,6 +566,18 @@ void MapReservationsRoutes()
     })
         .RequireAuthorization(Policy.IsAuthenticated)
         .Produces<Reservation>()
+        .Produces<ErrorMessage>(401)
+        .Produces<ErrorMessage>(403)
+        .Produces<ErrorMessage>(404);
+    
+    // GET total available water supply based on active reservations
+    group.MapGet("/{farmingCompanyId:int}/availableWater", ([FromServices] IReservationRepository repository, [FromRoute] int farmingCompanyId) =>
+    {
+        var res = repository.GetAvailableWaterSupply(farmingCompanyId);
+        return Results.Ok(res);
+    })
+        .RequireAuthorization(Policy.IsIotSubsystem)
+        .Produces<int>()
         .Produces<ErrorMessage>(401)
         .Produces<ErrorMessage>(403)
         .Produces<ErrorMessage>(404);

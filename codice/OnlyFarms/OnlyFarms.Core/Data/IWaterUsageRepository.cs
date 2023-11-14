@@ -9,4 +9,5 @@ public interface IWaterUsageRepository
     Task<WaterUsage> Add(int farmingCompanyId, int cropId, WaterUsage usage);
 
     Task<IEnumerable<(DateTime, int)>> GetTotalWaterUsage(int farmingCompanyId);
+    Task<int> GetTotalWaterUsage(int farmingCompanyId, DateTime? day);
 }

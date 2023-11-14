@@ -94,9 +94,27 @@ public class WaterUsageRepository : IWaterUsageRepository
         var company = await _companies.Get(farmingCompanyId);
         var usages = GetAll(company.Id);
 
+        // prende la lista di waterUsages di ogni crop ed esegue la somma di utilizzi per giornata
         var result = usages.ToBlockingEnumerable()
             .GroupBy(u => u.Timestamp.Date)
             .Select(group => (group.Key, group.Sum(u => u.ConsumedQuantity)));
+
+        return result;
+    }
+
+    public async Task<int> GetTotalWaterUsage(int farmingCompanyId, DateTime? day)
+    {
+        day ??= DateTime.Today;
+        
+        var company = await _companies.Get(farmingCompanyId);
+        var usages = GetAll(company.Id);
+        
+        // prende la lista di waterUsage della FarmingCompany, filtra per il giorno passato come parametro e calcola la quantita' totale
+        var result = usages.ToBlockingEnumerable()
+            .Where(u => u.Timestamp.Date == day)
+            .GroupBy(u => u.Timestamp.Date)
+            .Select(group => group.Sum(u => u.ConsumedQuantity))
+            .FirstOrDefault();
 
         return result;
     }

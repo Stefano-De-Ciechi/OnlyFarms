@@ -59,6 +59,72 @@ public class RestApiClient {
         return idealHumidity;
     }
 
+    /* restituisce gli utilizzi di acqua totali registrati per la data corrente (o per il giorno che gli si passa come parametro in formato aaaa/mm/gg */
+    public int getTotalWaterUsage(String day) {
+        RestTemplate client = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        headers.setBearerAuth(jwtToken);
+
+        String url = apiUrl + "/waterUsages/total";
+        url = (day == null) ? url : url + "?day=" + day;        // se viene passato day non nullo viene concatenato come query alla route
+
+        int totalWater;
+        HttpEntity<String> request = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<String> response = client.exchange(url, HttpMethod.GET, request, String.class);
+            String responseValue = response.getBody();
+
+            if (responseValue == null) {
+                return -1;
+            }
+
+            totalWater = Integer.parseInt(responseValue);
+
+        } catch (ResourceAccessException e) {
+            System.err.println(e.getMessage() + "\n" + errorMessage);
+            return -1;
+        } catch (NumberFormatException e) {
+            System.err.println("received a response with an invalid format");
+            return -1;
+        }
+
+        return totalWater;
+    }
+
+    public int getAvailableWaterSupply() {
+        RestTemplate client = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        headers.setBearerAuth(jwtToken);
+
+        String url = "http://localhost:5234/api/v1/reservations/" + farmingCompanyId + "/availableWater";
+
+        int totalWater;
+        HttpEntity<String> request = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<String> response = client.exchange(url, HttpMethod.GET, request, String.class);
+            String responseValue = response.getBody();
+
+            if (responseValue == null) {
+                return -1;
+            }
+
+            totalWater = Integer.parseInt(responseValue);
+
+        } catch (ResourceAccessException e) {
+            System.err.println(e.getMessage() + "\n" + errorMessage);
+            return -1;
+        } catch (NumberFormatException e) {
+            System.err.println("received a response with an invalid format");
+            return -1;
+        }
+
+        return totalWater;
+    }
+
     /* esegue una POST request
        manda un messaggio con un json body {"value" : int, "measuringUnit" : String}
        all url /api/v1/farmingCompanies/{farmingCompanyId}/crops/{cropId}/sensors/{sensorId}/measurements
