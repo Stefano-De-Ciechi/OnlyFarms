@@ -10,12 +10,14 @@ import java.util.Scanner;
 
 public class GestoreIoT implements MqttCallback {
 
-    // TODO rimuovere sta costante quando si esegue la demo
+    // TODO impostare la costante a true quando si esegue la demo
     private static final boolean SEND_DATA_TO_REST_API = true;     // impostare a false per evitare di "intasare" il DB
     private MqttClient mqttClient;
     private final RestApiClient apiClient;
     private final HashMap<Integer, String> lastActuatorCommandPerCrop;
-    private final HashMap<Integer, Boolean> waterUsagePerCropWasSent;
+    private final HashMap<Integer, Integer> lastConsumedQuantityPerCrop;
+    private final int availableWaterSupply;
+    private int waterLimit;
 
     public GestoreIoT(int farmingCompanyId, String jwtToken) {
 
@@ -33,7 +35,6 @@ public class GestoreIoT implements MqttCallback {
         MqttConnectOptions options = new MqttConnectOptions();
         options.setCleanSession(true);
         options.setAutomaticReconnect(true);
-        //options.setKeepAliveInterval(1000);
 
         try {
             this.mqttClient.setCallback(this);
@@ -59,8 +60,11 @@ public class GestoreIoT implements MqttCallback {
         }
 
         this.lastActuatorCommandPerCrop = new HashMap<>();
-        this.waterUsagePerCropWasSent = new HashMap<>();
+        this.lastConsumedQuantityPerCrop = new HashMap<>();
 
+        this.availableWaterSupply = getAvailableWaterSupply();
+        this.waterLimit = availableWaterSupply;
+        System.out.println("\ntotale acqua disponibile per oggi (in base alle prenotazioni attive): " + availableWaterSupply + " litri");
     }
 
     public void showMenu() {
@@ -125,14 +129,15 @@ public class GestoreIoT implements MqttCallback {
 
         Map<String, Object> values = parseMessageValues(message);       // per accedere ai valori usare values.get("sensorId") o values.get("value") ecc., necessario fare un cast ad Integer o String
 
+        if (values == null) {
+            System.err.println("received an invalid message format from topic: " + topic);
+            return;
+        }
+
         // qui ho dovuto usare una regular expression per poter comprendere tutti i topic con lo stesso formato ma valori numerici diversi; \\d indica un qualunque numero
         if (topic.matches("crops/\\d/sensors/\\d/measurements")) {
 
             // qui values contiene: {cropId=int,sensorId=int,sensorType=["Temperature" | "Humidity"],value=int,measuringUnit=["C°" | "%"]}
-            if (values == null) {
-                System.err.println("received an invalid message format from topic: " + topic);
-                return;
-            }
 
             // chiamata alla RestApi per registrare la misurazione letta dal sensore
             if (!sendSensorMeasurementToApi(values)) {
@@ -153,12 +158,31 @@ public class GestoreIoT implements MqttCallback {
             String command;
 
             // logica per attivare o disattivare gli attuatori (publish sul topic "crops/+/actuators/commands" di un comando "ON" o "OFF")
+
+            int totalConsumedWater = getTotalWaterUsage();
+            //System.err.println("totalConsumedWater: " + totalConsumedWater);
+            int lastConsumedQuantity = 0;
+
+            if (lastConsumedQuantityPerCrop.containsKey(cropId)) {
+                lastConsumedQuantity = lastConsumedQuantityPerCrop.get(cropId);
+                //System.err.println("lastConsumedQuantity: " + lastConsumedQuantity);
+            }
+
+            if (lastActuatorCommandPerCrop.containsKey(cropId) && lastActuatorCommandPerCrop.get(cropId).equals("ON")) {
+                waterLimit = (availableWaterSupply - totalConsumedWater - lastConsumedQuantity);
+            }
+            
+            System.out.println("acqua rimanente: " + (availableWaterSupply - totalConsumedWater) + " / " + availableWaterSupply);
+
             if (sensorType.equals("Humidity")) {
                 MqttMessage m;
-                command = (currentHumidity < idealHumidity) ? "ON" : "OFF";
+                command = (currentHumidity < idealHumidity && waterLimit > 0) ? "ON" : "OFF";
+
+                if (waterLimit < lastConsumedQuantity) {
+                    System.out.println("RISERVA IDRICA AL LIMITE");
+                }
 
                 if (lastActuatorCommandPerCrop.containsKey(cropId)) {
-
                     // lastActuatorCommandPerCrop immagazzina l'ultimo comando ricevuto, se il nuovo comando e' uguale al precedente non lo si invia (cosi' si evitano messaggi duplicati anche nel DB)
                     if (!lastActuatorCommandPerCrop.get(cropId).equals(command)) {
                         lastActuatorCommandPerCrop.put(cropId, command);
@@ -174,26 +198,22 @@ public class GestoreIoT implements MqttCallback {
 
             }
 
+            System.out.println("\n=======================\n");
+
         }
 
         if (topic.matches("crops/\\d/waterUsages")) {
             // qui values contiene: {cropId=int,waterUsage=int}
-            if (values == null) {
-                System.err.println("received an invalid message format from topic: " + topic);
-                return;
-            }
 
             int cropId = (int) values.get("cropId");
             int waterUsage = (int) values.get("consumedQuantity");
+            int spilledWater = (int) values.get("spilledWater");
 
-            // se un waterUsage non e' ancora stato inviato per oggi lo invia alla restApi
-            if (!waterUsagePerCropWasSent.containsKey(cropId)) {
+            lastConsumedQuantityPerCrop.put(cropId, spilledWater);
 
-                if (!sendWaterUsageToApi(cropId, waterUsage)) {
-                    System.err.println("could not send waterUsage to Rest API, verify that the application is running on http://localhost:5234 and that you have a valid JwtToken");
-                    return;
-                }
-                waterUsagePerCropWasSent.put(cropId, true);
+            if (!sendWaterUsageToApi(cropId, waterUsage)) {
+                System.err.println("could not send waterUsage to Rest API, verify that the application is running on http://localhost:5234 and that you have a valid JwtToken");
+                return;
             }
         }
 
@@ -201,10 +221,6 @@ public class GestoreIoT implements MqttCallback {
         if (topic.matches("crops/\\d/actuators/commands-confirmation")) {
 
             // qui values contiene {cropId=int,actuatorId=int,command=String}
-            if (values == null) {
-                System.err.println("received an invalid message format from topic: " + topic);
-                return;
-            }
 
             int cropId = (int) values.get("cropId");
             int actuatorId = (int) values.get("actuatorId");
@@ -271,6 +287,19 @@ public class GestoreIoT implements MqttCallback {
         return this.apiClient.getCropIdealHumidity(cropId);
     }
 
+    private int getAvailableWaterSupply() {
+        return this.apiClient.getAvailableWaterSupply();
+    }
+
+    // consumedWaterTMP e' usata solo quando l'accesso alla rest api e' disattivato (per emulare i valori di WaterUsage che incrementano man mano)
+    static int consumedWaterTMP = 0;
+    private int getTotalWaterUsage() {
+        if (!SEND_DATA_TO_REST_API) {
+            return consumedWaterTMP;
+        }
+        return this.apiClient.getTotalWaterUsage(null);     // null perche' ci interessa l'utilizzo di oggi
+    }
+
     private boolean sendSensorMeasurementToApi(Map<String, Object> values) {
         if (!SEND_DATA_TO_REST_API) {
             System.out.println("emulating a POST request to api for sensor measurement with body: " + values);
@@ -321,6 +350,7 @@ public class GestoreIoT implements MqttCallback {
     private boolean sendWaterUsageToApi(int cropId, int waterUsage) {
         if (!SEND_DATA_TO_REST_API) {
             System.out.println("emulating a POST request to api with waterUsage = " + waterUsage);
+            consumedWaterTMP += waterUsage;
             return true;
         }
 

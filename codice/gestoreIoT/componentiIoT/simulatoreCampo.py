@@ -2,12 +2,11 @@ import json
 import os
 from random import randint
 
-
 def SetValues():
     # serve a trovare il file anche quando il programma viene eseguito partendo da un'altra cartella
     filePath = os.path.dirname(os.path.abspath(__file__)) 
     
-    fileName = os.path.join(filePath, "datiSensore.json")
+    fileName = os.path.join(filePath, "cropData.json")
 
     with open(fileName, "r") as f:
         data = json.load(f)

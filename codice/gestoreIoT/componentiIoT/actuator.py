@@ -30,7 +30,7 @@ commands_file = os.path.join(file_path, commands_file_name)
 time_of_day_values = ["Mattina", "Pomeriggio", "Sera"]
 time_of_day = None
 
-waterUsageWasSent = False       # flag usato per inviare gli utilizzi di acqua una sola volta (quando time_of_day diventa "Sera")
+#waterUsageWasSent = False       # flag usato per inviare gli utilizzi di acqua una sola volta (quando time_of_day diventa "Sera")
 
 update_data = Event()
 stop_simulation = Event()
@@ -56,7 +56,7 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
 
     # invia la conferma di ricezione del comando al gestore IoT
     if msg.topic == COMMANDS_TOPIC and message in ["ON", "OFF"]:
-
+        
         client.publish(
             topic=COMMANDS_CONFIRMATION_TOPIC,
             payload=f"cropId={crop_id},actuatorId={actuator_id},command={message}",
@@ -76,7 +76,7 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
 
         elif message == 'OFF':
             update_data.clear()
-            print("reached ideal humidity value")
+            print("irrigation stopped")
 
     if time_of_day in time_of_day_values and time_of_day == "Sera":
         if not update_data.is_set():
@@ -88,25 +88,13 @@ def read_water_usage() -> int:
         return int(data["WaterUsage"])
 
 def update_crop_data():
-    global waterUsageWasSent
+    #global waterUsageWasSent
 
     while not stop_simulation.is_set():
 
         update_data.wait()      # e' come una sleep che attende di essere interrotta dal segnale
 
         if time_of_day in time_of_day_values and time_of_day == "Sera":
-
-            if not waterUsageWasSent:
-                msg = f"cropId={crop_id},consumedQuantity={read_water_usage()}"
-                
-                client.publish(
-                    topic=WATER_USAGE_TOPIC,
-                    payload=msg,
-                    qos=2,
-                    retain=False
-                )
-
-                waterUsageWasSent = True    # non inviare piu' water usage per oggi
 
             print("sleeping")
             stop_simulation.wait(sleep_interval)
@@ -119,6 +107,14 @@ def update_crop_data():
             if time_of_day != "Sera":
                 data[time_of_day]['Humidity'] += humidity_increment
                 data["WaterUsage"] += water_usage_increment
+
+                msg = f"cropId={crop_id},consumedQuantity={read_water_usage()},spilledWater={water_usage_increment}"
+                client.publish(
+                    topic=WATER_USAGE_TOPIC,
+                    payload=msg,
+                    qos=2,
+                    retain=False
+                )
                 
                 with open(crop_file, "w+", encoding='utf-8') as f:
                     json.dump(data, f, indent=4, ensure_ascii=False)
