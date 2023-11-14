@@ -5,12 +5,11 @@ from sys import exit, argv
 from threading import Event
 
 # ===== CONFIGURAZIONE =====
-# TODO assegnare in modo "statico" i valori di crop_id e sensor_id in base a quale sensore nel DB si vuole emulare
 
-crop_id = 3          # nel DB e' una crop creata per test
-sensor_id = 3        # nel DB e' un sensore creato per test
+crop_id = 1          # nel DB e' una crop creata per test
+sensor_id = 1        # nel DB e' un sensore creato per test
 sensor_type = "Humidity"     # "Temperature" | "Humidity"
-crop_file_name = "datiSensore.json"     # nome del file che emula il campo
+crop_file_name = "cropData.json"     # nome del file che emula il campo
 
 sleep_interval = 10     # n. di secondi di pausa tra due letture di misurazioni dal campo / file + invio messaggio su mqtt
 

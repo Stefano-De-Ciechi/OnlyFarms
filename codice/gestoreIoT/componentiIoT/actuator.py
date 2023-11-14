@@ -6,14 +6,14 @@ from threading import Event
 
 # ===== CONFIGURAZIONE =====
 
-crop_id = 3          # nel DB e' una crop creata per test
-actuator_id = 2      # nel DB e' un attuatore creato per test
+crop_id = 1          # nel DB e' una crop creata per test
+actuator_id = 1      # nel DB e' un attuatore creato per test
 
 sleep_interval = 10
 humidity_increment = 1
 water_usage_increment = 500
 
-crop_file_name = "datiSensore.json"
+crop_file_name = "cropData.json"
 commands_file_name = "actuatorCommands.txt"
 
 COMMANDS_TOPIC = f"crops/{crop_id}/actuators/commands"

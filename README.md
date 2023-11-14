@@ -1,4 +1,4 @@
-# AA22-23-Gruppo13
+# AA 22-23 | Gruppo 13
 
 # ===== parte di Applicazioni Web =====
 La relazione sulle scelte implementative si trova nel file "Relazione.md" nella cartella /codice/OnlyFarms/OnlyFarms.WebApp
@@ -50,29 +50,81 @@ le email da utilizzare sono:
 
 
 
-# ===== PISSIR =====
+# ===== parte di PISSIR =====
 
 ## Istruzioni per il setup
 
+**ATTENZIONE**: per eseguire le parti di RestApi e WebApp fare riferimento alla [Parte di Applicazioni Web](#parte-di-applicazioni-web)
+
 ### Cosa serve:
-- per poter eseguire il corretto funzionamento del progetto riguardante il gestoreIoT, occorre utilizzare la versione 17 di Java e la versione 11 o superiore di Python.
+
+**Premessa** ogni sistema operativo ha i propri metodi di installazione, cercare quello piu' corretto per ogni dipendenza indicata (es. package manager su linux, download diretto per windows, brew per macOs ecc.
+)
+- [maven](https://maven.apache.org/download.cgi) (build system per Java), l'ultima versione dovrebbe essere compatibile ma nel caso non dovesse funzionare scaricare una delle versioni 3.8.x
+- [Java versione 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) (verificare con il comando "java --version" che sia effetivamente in uso nel sistema la versione 17, altrimenti maven build potrebbe fallire)
+- [Python 3.11](https://www.python.org/downloads/release/python-3110/) o superiore + [pip - package installer for python](https://pypi.org/project/pip/) (dovrebbe essere compreso nell'installazione)
+- [Eclipse Mosquitto](https://mosquitto.org/download/) come broker MQTT
 
 ### Setup iniziale:
-1) Clonare questa repository.
-2) Installare Eclipse Paho MQTT Python attraverso l'utilizzo del terminale e del comando: "pip install paho-mqtt".
-3) Successivamente sarà necessario installare e avviare il broker mosquitto. All'interno dei sistemi Windows si dovrà eseguire un download dal sito ufficiale "mosquitto.org", per quanto riguarda i sistemi macOS, l'installazione può avvenire attraverso l'utilizzo del terminale e del comando: "brew install mosquitto".
-4) Una volta che completati i passaggi precedenti sarà necessaria anche l'installazione di Maven. Quest'ultima avviene attraverso il download dal sito "Apache Maven" all'interno del quale vi sono presenti tutte le versioni per i diversi sistemi operativi. 
-Una volta completati questi passagi l'ambiente è pronto all'uso per il lancio dell'applicazione.
 
-### Esecuzione
+#### Gestore IoT (Java):
+1) entrare nella cartella "codice/gestoreIoT/gestoreIoT" (verificare che sia presente il file *pom.xml*)
+2) eseguire il build del progetto (dovrebbe scaricare in automatico le librerie) con il comando "mvn clean install -DskipTests"
+3) se il build non va a buon fine verificare di star usando Java 17!
 
-**Premessa**: L'applicazione è stata sviluppata e testata all'interno dei sistemi Linux e masOS.
+#### Componenti IoT (Python):
+1) entrare nella cartella "codice/gestoreIoT/componentiIoT"
+2) *opzionale*: creare un [virtual environment](https://docs.python.org/3/library/venv.html) se non si vuole installare la libreria "globalmente"
+3) eseguire il comando "pip install paho-mqtt" (unica libreria esterna)
 
-1. Avviare mosquito attraverso l'utilizzo del comando "mosquitto" all'interno del terminale.
-2. Fare in modo che la Rest API sia attiva:
-   -Per attivarla seguire i passaggi:
-      - "cd codice/OnlyFarms/OnlyFarms.RestApi"
-      - "dotnet build"
-      - "dotnet run --launch-profile https"
+### Esecuzione della demo:
 
-3. Infine avviare la classe GestoreIoT di Java e successivamente i file di Python seguendo le indicazioni da terminale.
+per questa parte e' necessario prima avere eseguito il setup della [parte di applicazioni web](#parte-di-applicazioni-web), specialmente la parte in cui si settano i **segreti utente** (altrimenti i token jwt usati nella rest api non funzioneranno)
+
+**PREMESSA**: l'applicazione e' stata sviluppata e testata prevalentemente su sistemi linux e macOs
+
+*l'esecuzione della demo richiede un buon numero di finestre di terminale aperte, un solo schermo potrebbe non essere sufficiente per visualizzare tutto*
+
+1) avviare un'istanza di **mosquitto** (comando "mosquitto" in un terminale; in alcuni sistemi potrebbe essere gia' attivo e restituire un errore del tipo "porta 1883 gia' in uso)
+
+2) avviare la **rest api**:
+   - cd "codice/OnlyFarms/Onlyfarms.RestApi"
+   - "dotnet build"
+   - "dotnet run --launch-profile https"
+
+   nella cartella e' presente un file **CLEAN_OnlyFarms.sqlite**, rimuovere CLEAN_ e sostituire con il file originale per avere un DB senza "valori spazzatura" potenzialmente rimasti da qualche test
+
+3) avviare la **web app** (solo se si vuole anche la parte grafica):
+   - cd "codice/OnlyFarms/Onlyfarms.WebApp"
+   - "dotnet build"
+   - "dotnet run --launch-profile https"
+
+4) avviare gli emulatori dei **componenti IoT**:
+   - cd "codice/gestoreIoT/componentiIoT"
+   - eseguire il comando "python3 simulatoreCampo.py", che assegna dei valori random all'interno del file *cropData.json* e azzera i dati residui da esecuzioni precedenti
+   - aprire (e tenere aperto) il file *cropData.json* per vedere come i valori cambiano in base allo stato degli attuatori
+   - aprire (e tenere aperto) ed eventualmente cancellare il contenuto del file *actuatorCommands.txt* (questo file serve ad avere una rappresentazione visiva dello stato degli attuatori)
+   - in un nuovo terminale (nella stessa directory) eseguire il comando "python3 actuator.py"
+   - in un nuovo terminale (nella stessa directory) eseguire il comando "python3 sensor.py"
+
+5) avviare il **gestore IoT**:
+   - cd "codice/gestoreIoT/gestoreIoT" (deve essere presente il file *pom.xml*)
+   - eseguire il comando: mvn exec:java -Dexec.mainClass="application.gestoreIoT.GestoreIoT"
+
+### Funzionamento della demo:
+
+la demo simula una giornata per la FarmingCompany di id=1 accessibile nella web app con le credenziali:
+- username: farm1@test.com
+- password: Pa$$w0rd
+
+viene simulata una sola coltivazione (con id=1) al cui interno sono presenti un irrigatore (id=1) e un sensore di umidita' (id=1)
+
+alcuni valori parametrici di sensori e attuatori possono essere modificati direttamente nei file python per cambiarne un po' il funzionamento (es. tempo di sleep tra due letture o quantita' di acqua erogata)
+
+dal menu del **gestore IoT** si possono simulare le 3 parti della giornata:
+- "Mattina" e "Pomeriggio" : sensori e attuatori agiscono su due set differenti di valori di temperatura e umidita'; ogni misurazione o cambio di stato viene inviato alla RestApi per essere registrato nel DB (se si sta usando l'applicazione web aggiornando la pagina si possono vedere i nuovi valori)
+- "Sera" : sensori ed attuatori sono disattivati (entrano in sleep) e si invia alla Rest Api il valore di acqua consumata dalla coltivazione per quella giornata
+- se si vuole ricominciare la simulazione senza terminare tutti i programmi e riavviarli si può eseguire di nuovo il comando "python3 simulatoreCampo.py" e ricominciare dalla "Mattina" o dal "Pomeriggio" (**nota**: i timestamp riportano comuqnue il giorno corrente, e la Sera il valore di acqua consumata verra' sovrascritto)
+- l'ultima opzione "concludi simulazione" invia a tutti i componenti IoT un messaggio di "TURN_OFF" per interrompere automaticamente l'esecuzione del programma in python
+
+e' possibile simulare altre aziende e coltivazioni modificando i valori dei vari id nel main di *GestoreIoT.java* e nei due file *actuator.py* e *sensor.py* (verificando prima che tali componenti esistano nel DB)
