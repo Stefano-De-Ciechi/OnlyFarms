@@ -1,6 +1,11 @@
-# AA 22-23 | Gruppo 13
+# OnlyFarms 
 
-# ===== parte di Applicazioni Web =====
+**ATTENZIONE**: alcune funzionalita' del progetto (come l'autenticazione tramite account google) potrebbero non funzionare piu' correttamente, in quanto per generare i segreti utente (tipo ClientID e ClientSecret) era stato utilizzato l'account Google universitario probabilmente non piu' attivo.
+
+# Informazioni:
+Progetto sviluppato assieme ad altri tre studenti per due corsi universitari durante l'anno accademico 2023 / 2024, che comprende un'applicazione web scritta in C# + ASP.NET Core e una REST API (sempre in C# + .NET Core) a supporto di un gestore di dispositivi IoT scritto in Java, piu' alcuni emulatori di sensori e attuatori scritti in Python. Il progetto e' strutturato con un'architettura a microservizi.
+
+# ===== Parte del corso di Applicazioni Web =====
 La relazione sulle scelte implementative si trova nel file "Relazione.md" nella cartella /codice/OnlyFarms/OnlyFarms.WebApp
 
 ## Istruzioni per il setup
@@ -32,6 +37,8 @@ Per lanciare la **Rest API** da terminale:
 2) dotnet build
 3) dotnet run --launch-profile https
 
+la documentazione della REST API (generata con Swagger) puo' essere visitata navigando agli url http://localhost:5234/swagger oppure https://localhost:7058/swagger
+
 se si decide di eseguire i progetti da qualche IDE (tipo Visual Studio o Rider) assicurarsi di eseguire il profilo HTTPS
 
 ### Credenziali di accesso per provare il sistema:
@@ -50,7 +57,7 @@ le email da utilizzare sono:
 
 
 
-# ===== parte di PISSIR =====
+# ===== parte del corso Progettazione e Implementazione di Sistemi Software In Rete (PISSIR) =====
 
 ## Istruzioni per il setup
 
